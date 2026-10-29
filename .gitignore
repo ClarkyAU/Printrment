@@ -1,0 +1,7 @@
+# build output
+*.exe
+# mock tool binaries, test certificates, test video
+devtools/mockmqtt/mockmqtt
+devtools/mockftp/mockftp
+*.pem
+devtools/rtspmock/t.h264
