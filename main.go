@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
-	_ "embed"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -18,18 +17,14 @@ import (
 	"time"
 )
 
-//go:embed ffmpeg.exe.gz
-var ffmpegGz []byte
-
 // ---------------------------------------------------------------- ffmpeg
 
 var ffmpegOnce sync.Once
 var ffmpegPath string
 var ffmpegErr error
 
-// ffmpegSHA256 is the SHA-256 of the unpacked ffmpeg.exe (checked by
-// TestFFmpegHash, so it can't drift from the embedded file).
-const ffmpegSHA256 = "2ce797a0f88d7f067180338fb227f7b1928ea727bd9a4d7a1d022f7c52af71a3"
+// ffmpegGz, ffmpegSHA256 and ffmpegExt come from ffmpeg_windows.go /
+// ffmpeg_linux.go: each build carries only its own system's FFmpeg.
 
 func fileSHA256(p string) string {
 	f, err := os.Open(p)
@@ -52,7 +47,7 @@ func getFFmpeg() (string, error) {
 		return p, nil
 	}
 	ffmpegOnce.Do(func() {
-		p := filepath.Join(localDir(), "ffmpeg-"+ffmpegSHA256[:16]+".exe")
+		p := filepath.Join(localDir(), "ffmpeg-"+ffmpegSHA256[:16]+ffmpegExt)
 		if fileSHA256(p) == ffmpegSHA256 {
 			ffmpegPath = p
 			return
@@ -90,7 +85,7 @@ func getFFmpeg() (string, error) {
 		ffmpegPath = p
 		// tidy up copies left by older versions (they lived in the roaming profile)
 		for _, dir := range []string{dataDir(), localDir()} {
-			old, _ := filepath.Glob(filepath.Join(dir, "ffmpeg-*.exe"))
+			old, _ := filepath.Glob(filepath.Join(dir, "ffmpeg-*"+ffmpegExt))
 			for _, o := range old {
 				if o != p {
 					os.Remove(o)

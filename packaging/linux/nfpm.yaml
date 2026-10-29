@@ -1,0 +1,42 @@
+# Fedora / RHEL package. Built by build.sh (needs nfpm).
+name: printrment
+arch: amd64
+platform: linux
+version: ${PRINTRMENT_VERSION}
+release: 1
+section: utils
+maintainer: Clarky3D
+vendor: Clarky3D
+homepage: https://github.com/ClarkyAU/Printrment
+license: Proprietary; bundled FFmpeg is GPL-3.0-or-later
+description: |
+  Printrment watches and looks after a Bambu Lab printer over your home
+  network: live camera, status, AMS, printer files, alerts, timelapses and
+  snapshots, with a PIN-protected web version for other devices.
+depends:
+  - xdg-utils
+recommends:
+  - pipewire-utils
+contents:
+  - src: build/linux/printrment
+    dst: /usr/bin/printrment
+    file_info: {mode: 0755}
+  - src: packaging/linux/printrment.desktop
+    dst: /usr/share/applications/printrment.desktop
+    file_info: {mode: 0644}
+  - src: build/linux/icons/printrment-64.png
+    dst: /usr/share/icons/hicolor/64x64/apps/printrment.png
+    file_info: {mode: 0644}
+  - src: build/linux/icons/printrment-128.png
+    dst: /usr/share/icons/hicolor/128x128/apps/printrment.png
+    file_info: {mode: 0644}
+  - src: build/linux/icons/printrment-256.png
+    dst: /usr/share/icons/hicolor/256x256/apps/printrment.png
+    file_info: {mode: 0644}
+  - src: README.md
+    dst: /usr/share/doc/printrment/README.md
+    file_info: {mode: 0644}
+rpm:
+  summary: Bambu Lab printer monitor
+  group: Applications/System
+  compression: zstd

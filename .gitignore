@@ -1,5 +1,6 @@
 # build output
 *.exe
+build/
 # mock tool binaries, test certificates, test video
 devtools/mockmqtt/mockmqtt
 devtools/mockftp/mockftp

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,7 +20,7 @@ import (
 )
 
 const listenAddr = "127.0.0.1:8787"
-const version = "0.29"
+const version = "0.30"
 
 var (
 	lastActivity   time.Time
@@ -125,7 +126,7 @@ func newMux() *http.ServeMux {
 			evs, last = eventsSince(since)
 		}
 		writeJSON(w, map[string]any{
-			"version": version, "remote": isRemote(r), "active": s.Active,
+			"version": version, "os": runtime.GOOS, "remote": isRemote(r), "active": s.Active,
 			"printers": ps, "events": evs, "last_event": last,
 			"remote_controls": s.RemoteControls, "theme": s.Theme,
 		})

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Printrment
+GenericName=3D Printer Monitor
+Comment=Watch and look after your Bambu Lab printer
+Exec=printrment
+Icon=printrment
+Terminal=false
+Categories=Utility;Graphics;3DGraphics;
+Keywords=Bambu;3D;printer;camera;AMS;
+StartupNotify=false

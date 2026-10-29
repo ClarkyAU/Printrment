@@ -1085,12 +1085,13 @@ function renderSettings(){
     h("div",{class:"btns",style:"margin-top:10px;max-width:380px"},h("button",{class:"pri",onclick:openRemote},"Open on this PC"),h("button",{onclick:()=>saveSetting({},{new_pin:true})},"New PIN (signs everyone out)")),
     h("div",{class:"mut",style:"margin-top:6px;font-size:12px",text:"Open on this PC shows the web version in your normal browser, so you can check the page and PIN. It doesn't test Wi-Fi or the firewall - use a phone for that."}),
     remoteNote?h("div",{class:"note "+(remoteNote.ok?"ok":"err"),text:remoteNote.text}):null,
-    h("div",{class:"note",text:"The first time, Windows may ask whether to allow Printrment on private networks. Allow it, or other devices can't connect."})));
+    h("div",{class:"note",text:LIN()?"Fedora's firewall usually allows this already. If other devices can't connect, allow the port: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload":"The first time, Windows may ask whether to allow Printrment on private networks. Allow it, or other devices can't connect."})));
   out.push(field("Port",h("div",{style:"display:flex;gap:6px"},port,h("button",{onclick:ev=>{ev.preventDefault();saveSetting({remote_port:parseInt(port.value)||8788})}},"Save"))));
   const st=(t,d)=>h("li",null,h("b",{text:t}),h("div",{class:"mut",text:d}));
   out.push(h("details",{class:"guide",open:guideOpen==null?!s.remote:guideOpen,ontoggle:e=>{guideOpen=e.target.open}},h("summary",null,"How to set up remote access"),
    h("ol",null,
     st("Turn it on and try it here","Switch on \"Allow viewing from other devices on my network\" above. An address and a PIN appear. Press \"Open on this PC\" to check the page and PIN in your browser first."),
+    LIN()?st("Allow it through the firewall","Fedora's firewall (firewalld) is on, but Fedora Workstation already lets other devices on your network reach ports like this one, so usually there's nothing to do. If they can't connect, run in a terminal: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload"):
     st("Allow it through Windows Firewall","The first time, Windows asks whether Printrment may use the network. Tick Private networks and choose Allow. If you missed it: Start > Windows Security > Firewall & network protection > Allow an app through firewall > tick Private next to Printrment."),
     st("Put the other device on the same network","Remote access only works on your home network - for a phone that means Wi-Fi, not mobile data. Guest Wi-Fi networks usually block devices from seeing each other, so use the main one."),
     st("Open the address in a browser","On the other device, type the address shown above into the browser (Safari, Chrome, Edge...) exactly as shown, including the :"+(s.remote_port||8788)+" at the end. If more than one address is listed, try the first; the others are for other network connections on this PC."),
@@ -1110,7 +1111,7 @@ function renderSettings(){
     h("li",null,"Turn remote access off when you don't need it."))));
  }else if(setTab==="app"){
   out.push(h("h4",null,"App"),h("p",{class:"sub"},"How Printrment starts and closes."),
-   h("div",{class:"box"},sw("Closing the window hides Printrment in the tray","tray","Off (default): the close button quits Printrment completely. On: it keeps running in the tray by the clock, so alerts and timelapses carry on - right-click the tray icon and choose Quit to close it fully."),sw("Start with Windows","autostart","Starts quietly in the tray when you sign in. If you move Printrment.exe, turn this off and on again.")),
+   h("div",{class:"box"},sw("Closing the window hides Printrment in the tray","tray","Off (default): the close button quits Printrment completely. On: it keeps running in the tray by the clock, so alerts and timelapses carry on - right-click the tray icon and choose Quit to close it fully."+(LIN()?" Fedora's GNOME desktop only shows tray icons with the AppIndicator extension: sudo dnf install gnome-shell-extension-appindicator, then sign out and back in. KDE shows them already.":"")),sw(LIN()?"Start when I sign in":"Start with Windows","autostart","Starts quietly in the tray when you sign in. If you move "+(LIN()?"Printrment":"Printrment.exe")+", turn this off and on again.")),
    h("h4",{style:"margin-top:18px"},"Back up your settings"),
    h("p",{class:"sub"},"Saves your printers, theme and options to a file, to set up another PC or after a reinstall. Access codes, the remote access PIN and printer certificates are left out - you enter the codes again after importing."),
    h("div",{style:"display:flex;gap:8px;flex-wrap:wrap"},h("button",{onclick:exportSettings},"Export settings"),h("button",{onclick:()=>$("#impfile").click()},"Import settings...")),
@@ -1120,20 +1121,20 @@ function renderSettings(){
   const li3=(n,d,l)=>h("li",null,h("b",{text:n}),h("div",{text:d}),h("div",{class:"mut",style:"font-size:11px",text:l}));
   out.push(h("div",{class:"about"},
    h("div",{class:"abhead"},h("div",{class:"ablogo"},svg(IC.snap)),h("div",null,h("h4",{style:"margin:0"},"Printrment"),h("div",{class:"mut",text:"Version "+(S?S.version:"")}))),
-   h("p",null,"A small Windows app to watch and look after your Bambu Lab printer's camera, status, AMS, files and timelapses without running Bambu's own software."),
+   h("p",null,"A small "+(LIN()?"Linux":"Windows")+" app to watch and look after your Bambu Lab printer's camera, status, AMS, files and timelapses without running Bambu's own software."),
    h("h5",null,"Created by"),
    h("p",null,h("b",null,"Clarky3D"),", with ",h("b",null,"Claude"),", Anthropic's AI assistant."),
    h("h5",null,"Third-party software"),
    h("p",{class:"mut"},"Printrment is built from the open-source and freely licensed parts below. Thank you to everyone who makes them."),
    h("ul",null,
-    li3("FFmpeg","Video decoding, snapshots and timelapse rendering. Runs as a separate helper program built into this app.","GPL v3 - (c) the FFmpeg developers - ffmpeg.org"),
+    li3("FFmpeg "+(LIN()?"7.0.2 (static build by John Van Sickle)":"7.1"),"Video decoding, snapshots and timelapse rendering. Runs as a separate helper program built into this app.","GPL v3 - (c) the FFmpeg developers - ffmpeg.org"),
     li3("x264 (inside FFmpeg)","H.264 video encoder for timelapse files.","GPL v2 or later - (c) VideoLAN - videolan.org"),
-    li3("Microsoft Edge WebView2","Shows this window. Uses the WebView2 Runtime already installed with Windows.","Microsoft WebView2 licence - (c) Microsoft"),
-    li3("go-webview2","Go bindings that host WebView2.","MIT - (c) John Chadwick, Serge Zaitsev"),
-    li3("go-winloader","Loads the WebView2 loader.","ISC - (c) John Chadwick"),
+    LIN()?li3("Your web browser","Shows this window: a Chrome, Chromium, Edge or Brave app window if one is installed (including Flatpak), otherwise a tab in your default browser.",""):li3("Microsoft Edge WebView2","Shows this window. Uses the WebView2 Runtime already installed with Windows.","Microsoft WebView2 licence - (c) Microsoft"),
+    li3("go-webview2","Go bindings that host WebView2"+(LIN()?" (Windows version only).":"."),"MIT - (c) John Chadwick, Serge Zaitsev"),
+    li3("go-winloader","Loads the WebView2 loader"+(LIN()?" (Windows version only).":"."),"ISC - (c) John Chadwick"),
     li3("fyne.io/systray","The tray icon and menu.","Apache 2.0 - (c) Fyne.io and the systray authors"),
-    li3("godbus/dbus","Linux tray support library (included in the code, unused on Windows).","BSD 2-clause - (c) Georg Reinke, Google"),
-    li3("golang.org/x/sys","Windows system calls.","BSD 3-clause - (c) The Go Authors"),
+    li3("godbus/dbus",LIN()?"Talks to the desktop: tray icon and showing files in the file manager.":"Linux desktop support library (included in the code, unused on Windows).","BSD 2-clause - (c) Georg Reinke, Google"),
+    li3("golang.org/x/sys","Operating system calls.","BSD 3-clause - (c) The Go Authors"),
     li3("Go","The programming language and standard library this app is written in.","BSD 3-clause - (c) The Go Authors - go.dev")),
    h("h5",null,"Fonts"),
    h("ul",null,
@@ -1145,7 +1146,7 @@ function renderSettings(){
    h("h5",null,"Licences"),
    h("p",{class:"mut"},"FFmpeg and x264 are free software under the GNU General Public License. You can get their source code, and the licence texts, from ffmpeg.org and videolan.org. The other components are used under the licences named above; full texts are available from each project. Printrment itself is provided as is, with no warranty."),
    h("h5",null,"Your data"),
-   h("p",{class:"mut"},"Settings, printer details and logs are stored on this PC in your Windows user profile. Access codes and PINs are encrypted with Windows. Nothing is uploaded anywhere."),
+   h("p",{class:"mut"},LIN()?"Settings, printer details and logs are stored in your home folder (~/.config/Printrment). Access codes and PINs are encrypted with a key kept separately (~/.local/share/Printrment), readable only by you. Nothing is uploaded anywhere.":"Settings, printer details and logs are stored on this PC in your Windows user profile. Access codes and PINs are encrypted with Windows. Nothing is uploaded anywhere."),
    h("h5",null,"Good to know"),
    h("p",{class:"mut"},"Printrment is an independent project and is not made by, or connected to, Bambu Lab. Bambu Lab and its product names belong to their owners. It talks to your printer over your local network only; nothing is sent to the internet.")))
  }else if(setTab==="diag"){
@@ -1154,6 +1155,7 @@ function renderSettings(){
  }
  b.replaceChildren(...out.filter(Boolean));
 }
+const LIN=()=>!!(S&&S.os==="linux");
 let backupNote=null,guideOpen=null,remoteNote=null;
 async function openRemote(){try{const r=await api("/api/openremote",{});remoteNote=r.ok?{ok:true,text:"Opened in your browser."}:{ok:false,text:r.reason}}catch(e){remoteNote={ok:false,text:String(e.message||e)}}renderSettings();setTimeout(()=>{remoteNote=null;if(setTab==="phone")renderSettings()},4000)}
 async function exportSettings(){try{const r=await fetch("/api/export",{headers:HDR});if(!r.ok)throw new Error(await r.text());
