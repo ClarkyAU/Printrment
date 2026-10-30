@@ -28,6 +28,11 @@ var sessionToken = randHex(24)
 // localDir is for large, machine-specific files (video helper, browser cache):
 // %LOCALAPPDATA%\Printrment, so they don't travel with a roaming profile.
 func localDir() string {
+	if d := os.Getenv("PRINTRMENT_DATA"); d != "" { // server / Docker
+		p := filepath.Join(d, "cache")
+		os.MkdirAll(p, 0o700)
+		return p
+	}
 	d, err := os.UserCacheDir()
 	if err != nil {
 		return dataDir()
@@ -166,13 +171,14 @@ func lanClient(remoteAddr string) bool {
 // PIN guessing is limited: 5 wrong PINs locks that device out for 15 minutes,
 // and 20 wrong PINs from anywhere locks all sign-ins for 15 minutes.
 type loginGuard struct {
+	what    string // shown in the alert, e.g. "PINs ... for remote access"
 	mu      sync.Mutex
 	perIP   map[string][]time.Time
 	all     []time.Time
 	lockAll time.Time
 }
 
-var logins = &loginGuard{perIP: map[string][]time.Time{}}
+var logins = &loginGuard{what: "PINs were entered for remote access", perIP: map[string][]time.Time{}}
 
 func recent(ts []time.Time, d time.Duration) []time.Time {
 	out := ts[:0]
@@ -204,7 +210,7 @@ func (g *loginGuard) fail(ip string) {
 	}
 	g.mu.Unlock()
 	if n == 5 || total == 20 {
-		alert("", "warn", "Several wrong PINs were entered for remote access from "+ip+" - sign-ins are paused for 15 minutes")
+		alert("", "warn", "Several wrong "+g.what+" from "+ip+" - sign-ins are paused for 15 minutes")
 	}
 }
 

@@ -1,0 +1,44 @@
+name: Docker image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: v
+        run: echo "version=$(sed -n 's/^const version = "\(.*\)"/\1/p' server.go)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: |
+            ghcr.io/clarkyau/printrment:latest
+            ghcr.io/clarkyau/printrment:${{ steps.v.outputs.version }}
+          labels: |
+            org.opencontainers.image.title=Printrment
+            org.opencontainers.image.description=Bambu Lab printer monitor (server mode)
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.v.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}

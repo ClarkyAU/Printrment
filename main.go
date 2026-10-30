@@ -166,9 +166,17 @@ func takeOver(showWindow bool) bool {
 func main() {
 	hidden := false
 	for _, a := range os.Args[1:] {
-		if a == "--tray" {
+		switch a {
+		case "--tray":
 			hidden = true
+		case "--server":
+			serverMode = true
+		case "--healthcheck":
+			healthcheck()
 		}
+	}
+	if serverMode {
+		runServer()
 	}
 	if takeOver(!hidden) {
 		return

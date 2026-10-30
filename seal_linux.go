@@ -29,6 +29,14 @@ var (
 )
 
 func keyPath() string {
+	// Server / Docker: PRINTRMENT_KEY_FILE lets the key live on a separate
+	// mount (e.g. a secret) from the data volume holding the settings.
+	if p := os.Getenv("PRINTRMENT_KEY_FILE"); p != "" {
+		return p
+	}
+	if d := os.Getenv("PRINTRMENT_DATA"); d != "" {
+		return filepath.Join(d, "key", "secret.key")
+	}
 	d := os.Getenv("XDG_DATA_HOME")
 	if d == "" {
 		home, err := os.UserHomeDir()

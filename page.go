@@ -497,7 +497,7 @@ body.compact .rz{display:none}
 body.compact #badge{top:8px;left:8px}
 body.compact #toasts{right:10px;top:10px;width:260px}
 
-body.remote .local{display:none!important}
+body.remote .local{display:none!important}body.server #cpin,body.server #bquit{display:none!important}
 @media (max-width:820px){
  body{overflow:auto}
  #main{flex-direction:column;min-height:auto}
@@ -644,13 +644,13 @@ function setStream(){const v=$("#v");if(!active){v.removeAttribute("src");stream
 $("#v").onerror=()=>{streamFor=null;setTimeout(setStream,3000)};
 
 async function poll(){
- try{const j=await api("/api/state?since="+lastEv);j.printers=j.printers||[];j.events=j.events||[];const first=lastEv<0;S=j;remote=j.remote;document.body.classList.toggle("remote",remote);
+ try{const j=await api("/api/state?since="+lastEv);j.printers=j.printers||[];j.events=j.events||[];const first=lastEv<0;S=j;remote=j.remote;document.body.classList.toggle("remote",remote);document.body.classList.toggle("server",!!j.server);
   if(j.theme&&j.theme!==document.documentElement.dataset.theme)applyTheme(j.theme);
   if(!active||!j.printers.find(p=>p.id===active)){let a=null;try{a=localStorage.getItem("bc_active")}catch(e){}
    if(!a||!j.printers.find(p=>p.id===a))a=j.active;if(!a||!j.printers.find(p=>p.id===a))a=j.printers[0]?j.printers[0].id:null;active=a}
   setStream();
   const evs=j.events||[];if(first)evs.reverse();
-  evs.forEach(e=>{if(first){events.push(e);return}events.unshift(e);if(e.kind==="alert"){toast(e);if(!(pop==="alerts"&&logTab==="alerts"))unseen++}});
+  evs.forEach(e=>{if(first){events.push(e);return}events.unshift(e);if(e.sound)playSnd(e.sound);if(e.kind==="alert"){toast(e);if(!(pop==="alerts"&&logTab==="alerts"))unseen++}});
   events=events.slice(0,120);lastEv=j.last_event;
   render();if(F.open&&!F.infoLoading)renderFilesSoft();
   if(first&&!remote&&!j.printers.length)openSettings("printers",{});
@@ -708,7 +708,7 @@ function render(){
    out.push(h("div",{class:"lastjob "+(ok?"ok":j.result==="failed"?"bad":"")},
     h("b",{text:ok?"Finished":j.result==="failed"?"Failed":"Stopped"}),
     h("span",{text:[j.seconds?fmtDur(j.seconds):"",j.layers?j.layers+" layers":"",new Date(j.ended*1000).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})].filter(Boolean).join(" · ")}),
-    j.snapshot&&!remote?h("button",{title:"Show the picture taken when it ended",onclick:()=>api("/api/openfolder",{which:"file",path:j.snapshot}).catch(()=>{})},"Picture"):null))}
+    j.snapshot&&!remote?h("button",{title:"Show the picture taken when it ended",onclick:()=>showFile(j.snapshot)},"Picture"):null))}
   }else{out.push(h("div",{class:"prow"},h("span",{class:"big sm",text:name||"Unknown"})),st.file?h("div",{class:"pmeta"},h("span",{class:"pf",title:st.file,text:(st.state==="FINISH"?"Last: ":st.state==="FAILED"?"Stopped: ":"")+st.file})):null)}
   if(st.print_error)out.push(h("div",{class:"hms",title:"Check the printer's screen for details"},"Print error "+st.print_error));
   if(st.hms&&st.hms.length)out.push(h("div",{class:"hms",title:"Look these codes up on wiki.bambulab.com, or check the printer's screen"},"Alert ",st.hms.map(c=>h("span",{class:"code",text:c.replace("HMS_","")}))));
@@ -834,7 +834,7 @@ function renderPop(){const el=$("#pop");if(!pop||!S){el.className="";el.replaceC
    if(tl.recording&&cam.paused)out.push(h("div",{class:"note",text:"No frames are taken while the camera is paused."}));
    if(canCtl)out.push(h("div",{class:"btns",style:"margin-top:8px"},tl.recording?h("button",{onclick:()=>tlAct("stop")},"Stop & save"):h("button",{class:"pri",disabled:!p,onclick:()=>tlAct("start")},"Start recording")));
    if(!remote&&settingsCache)out.push(h("label",{class:"sw",style:"margin-top:8px"},h("span",null,"Record every print automatically"),h("input",{type:"checkbox",checked:settingsCache.timelapse_auto,onchange:e=>saveSetting({timelapse_auto:e.target.checked})}),h("i")));
-   if(tl.last_file&&!remote)out.push(h("div",{class:"note"},"Last: ",h("a",{href:"#",onclick:e=>{e.preventDefault();api("/api/openfolder",{which:"file",path:tl.last_file})},text:tl.last_file.split(/[\\/]/).pop()})));
+   if(tl.last_file&&!remote)out.push(h("div",{class:"note"},"Last: ",h("a",{href:"#",onclick:e=>{e.preventDefault();showFile(tl.last_file)},text:tl.last_file.split(/[\\/]/).pop()})));
    if(!remote)out.push(h("div",{class:"note"},h("a",{href:"#",onclick:e=>{e.preventDefault();pop=null;openSettings("files")},text:"Timelapse settings"})));
    return out})
  }}
@@ -959,7 +959,7 @@ function toast(e,action){const t=h("div",{class:"toast "+(e.level||"info")},h("d
 
 $("#bsnap").onclick=async()=>{const p=P();if(!p)return;
  if(remote){const a=h("a",{href:"/snapshot.jpg?id="+encodeURIComponent(p.id),download:"snapshot.jpg"});document.body.append(a);a.click();a.remove();return}
- try{const r=await api("/api/snapshot?id="+encodeURIComponent(p.id),{});if(r.ok)toast({level:"success",text:"Snapshot saved",name:r.path.split(/[\\/]/).pop()},{label:"Show in folder",fn:()=>api("/api/openfolder",{which:"file",path:r.path})});else toast({level:"error",text:r.reason})}catch(e){toast({level:"error",text:String(e.message||e)})}};
+ try{const r=await api("/api/snapshot?id="+encodeURIComponent(p.id),{});if(r.ok)toast({level:"success",text:"Snapshot saved",name:r.path.split(/[\\/]/).pop()},{label:SRV()?"Show":"Show in folder",fn:()=>showFile(r.path)});else toast({level:"error",text:r.reason})}catch(e){toast({level:"error",text:String(e.message||e)})}};
 $("#bretry").onclick=()=>api("/api/retry?id="+encodeURIComponent(active)).catch(()=>{});
 function setFull(on){
  if(typeof window.bcWin==="function"){
@@ -977,7 +977,7 @@ document.addEventListener("fullscreenchange",()=>{if(!native)document.body.class
 document.addEventListener("fullscreenchange",()=>{$("#ov")._k=null;render()});
 $("#stage").ondblclick=e=>{if(e.target.closest("button,#bar"))return;if(compact)setCompact(false);else setFull(!(fsMode||document.fullscreenElement))};
 $("#bquit").onclick=async()=>{try{await api("/api/quit",{})}catch(e){}document.body.innerHTML="<p style='padding:30px'>Printrment has closed. You can close this window.</p>";setTimeout(()=>window.close(),300)};
-function winMode(){if(!remote)api("/api/window",{ontop:compact&&cpin,compact:compact}).catch(()=>{})}
+function winMode(){if(!remote&&!SRV())api("/api/window",{ontop:compact&&cpin,compact:compact}).catch(()=>{})}
 function setCompact(c){if(c&&fsMode)setFull(false);compact=c;document.body.classList.toggle("compact",c);winMode();render()}
 $("#bcompact").onclick=()=>setCompact(!compact);$("#cexit").onclick=()=>setCompact(false);
 $("#cpin").onclick=()=>{cpin=!cpin;try{localStorage.setItem("bc_cpin",cpin?"1":"0")}catch(e){};winMode();render()};
@@ -1064,13 +1064,13 @@ function renderSettings(){
    h("div",{class:"box"},
     srow("Sound for problems","sound_problems","Failed or stopped prints, printer pauses and error codes.",[test("warn","Test pause"),test("error","Test failure")]),
     srow("Sound when a print finishes","sound_finished","A short chime.",[test("finished","Test")]),
-    srow("Flash the taskbar button for alerts","notify_flash","Only when the window isn't in front.",[])),
-   h("div",{class:"note",text:"Sounds play from Printrment itself, so you'll hear them even with the window minimised or closed to the tray. Pausing or stopping a print from Printrment doesn't sound an alarm."}));
+    SRV()?null:srow("Flash the taskbar button for alerts","notify_flash","Only when the window isn't in front.",[])),
+   h("div",{class:"note",text:SRV()?"Sounds play in this browser tab while it's open (your browser may need you to click the page once first). Pausing or stopping a print from Printrment doesn't sound an alarm.":"Sounds play from Printrment itself, so you'll hear them even with the window minimised or closed to the tray. Pausing or stopping a print from Printrment doesn't sound an alarm."}));
  }else if(setTab==="files"){
   const sd=h("input",{value:s.snapshot_dir}),td=h("input",{value:s.timelapse_dir}),iv=h("input",{type:"number",min:2,max:600,value:s.timelapse_interval,style:"max-width:120px"});
   out.push(h("h4",null,"Recording & files"),h("p",{class:"sub"},"Where snapshots and timelapse videos are saved."),
-   field("Snapshot folder",h("div",{style:"display:flex;gap:6px"},sd,h("button",{onclick:ev=>{ev.preventDefault();api("/api/openfolder",{which:"snapshots"})}},"Open"))),
-   field("Timelapse folder",h("div",{style:"display:flex;gap:6px"},td,h("button",{onclick:ev=>{ev.preventDefault();api("/api/openfolder",{which:"timelapses"})}},"Open"))),
+   field("Snapshot folder",h("div",{style:"display:flex;gap:6px"},sd,SRV()?null:h("button",{onclick:ev=>{ev.preventDefault();api("/api/openfolder",{which:"snapshots"})}},"Open"))),
+   field("Timelapse folder",h("div",{style:"display:flex;gap:6px"},td,SRV()?null:h("button",{onclick:ev=>{ev.preventDefault();api("/api/openfolder",{which:"timelapses"})}},"Open"))),
    h("div",{class:"box"},sw("Record a timelapse of every print","timelapse_auto","Starts when a print starts and saves an .mp4 when it finishes. The camera stays connected while recording, even with this window closed."),
     field("Take a frame",h("select",{onchange:e=>saveSetting({timelapse_mode:e.target.value})},opt("layer","Every layer (smooth, like Bambu's own timelapse)",s.timelapse_mode==="layer"),opt("interval","Every few seconds",s.timelapse_mode==="interval"))),
     s.timelapse_mode==="interval"?field("Seconds between frames",iv):null),
@@ -1082,16 +1082,16 @@ function renderSettings(){
    h("div",{class:"box"},sw("Allow viewing from other devices on my network","remote",setData.remote_error||null),sw("Allow controls (pause, stop, speed, light) from other devices","remote_controls")));
   if(s.remote&&setData.remote_running)out.push(h("div",{class:"box"},h("div",{class:"mut"},"In a browser on the other device, open:"),(setData.remote_urls||[]).map(u=>h("div",{class:"url",text:u})),
     h("div",{class:"mut",style:"margin-top:10px"},"PIN"),h("div",{class:"pin",text:s.remote_pin}),
-    h("div",{class:"btns",style:"margin-top:10px;max-width:380px"},h("button",{class:"pri",onclick:openRemote},"Open on this PC"),h("button",{onclick:()=>saveSetting({},{new_pin:true})},"New PIN (signs everyone out)")),
-    h("div",{class:"mut",style:"margin-top:6px;font-size:12px",text:"Open on this PC shows the web version in your normal browser, so you can check the page and PIN. It doesn't test Wi-Fi or the firewall - use a phone for that."}),
+    h("div",{class:"btns",style:"margin-top:10px;max-width:380px"},SRV()?null:h("button",{class:"pri",onclick:openRemote},"Open on this PC"),h("button",{onclick:()=>saveSetting({},{new_pin:true})},"New PIN (signs everyone out)")),
+    SRV()?null:h("div",{class:"mut",style:"margin-top:6px;font-size:12px",text:"Open on this PC shows the web version in your normal browser, so you can check the page and PIN. It doesn't test Wi-Fi or the firewall - use a phone for that."}),
     remoteNote?h("div",{class:"note "+(remoteNote.ok?"ok":"err"),text:remoteNote.text}):null,
-    h("div",{class:"note",text:LIN()?"Fedora's firewall usually allows this already. If other devices can't connect, allow the port: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload":"The first time, Windows may ask whether to allow Printrment on private networks. Allow it, or other devices can't connect."})));
+    SRV()?null:h("div",{class:"note",text:LIN()?"Fedora's firewall usually allows this already. If other devices can't connect, allow the port: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload":"The first time, Windows may ask whether to allow Printrment on private networks. Allow it, or other devices can't connect."})));
   out.push(field("Port",h("div",{style:"display:flex;gap:6px"},port,h("button",{onclick:ev=>{ev.preventDefault();saveSetting({remote_port:parseInt(port.value)||8788})}},"Save"))));
   const st=(t,d)=>h("li",null,h("b",{text:t}),h("div",{class:"mut",text:d}));
   out.push(h("details",{class:"guide",open:guideOpen==null?!s.remote:guideOpen,ontoggle:e=>{guideOpen=e.target.open}},h("summary",null,"How to set up remote access"),
    h("ol",null,
-    st("Turn it on and try it here","Switch on \"Allow viewing from other devices on my network\" above. An address and a PIN appear. Press \"Open on this PC\" to check the page and PIN in your browser first."),
-    LIN()?st("Allow it through the firewall","Fedora's firewall (firewalld) is on, but Fedora Workstation already lets other devices on your network reach ports like this one, so usually there's nothing to do. If they can't connect, run in a terminal: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload"):
+    SRV()?st("Turn it on","Switch on \"Allow viewing from other devices on my network\" above. An address and a PIN appear."):st("Turn it on and try it here","Switch on \"Allow viewing from other devices on my network\" above. An address and a PIN appear. Press \"Open on this PC\" to check the page and PIN in your browser first."),
+    SRV()?null:LIN()?st("Allow it through the firewall","Fedora's firewall (firewalld) is on, but Fedora Workstation already lets other devices on your network reach ports like this one, so usually there's nothing to do. If they can't connect, run in a terminal: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload"):
     st("Allow it through Windows Firewall","The first time, Windows asks whether Printrment may use the network. Tick Private networks and choose Allow. If you missed it: Start > Windows Security > Firewall & network protection > Allow an app through firewall > tick Private next to Printrment."),
     st("Put the other device on the same network","Remote access only works on your home network - for a phone that means Wi-Fi, not mobile data. Guest Wi-Fi networks usually block devices from seeing each other, so use the main one."),
     st("Open the address in a browser","On the other device, type the address shown above into the browser (Safari, Chrome, Edge...) exactly as shown, including the :"+(s.remote_port||8788)+" at the end. If more than one address is listed, try the first; the others are for other network connections on this PC."),
@@ -1099,7 +1099,7 @@ function renderSettings(){
     st("Controls (optional)","Out of the box, other devices can only watch. Switch on \"Allow controls\" above to let them use the light, speed and other controls too.")),
    h("b",null,"If it doesn't connect"),
    h("ul",null,
-    h("li",null,"Printrment must be running on this PC, and the PC awake. With the window closed it only keeps running if \"Closing the window hides Printrment in the tray\" is on (Settings > App)."),
+    h("li",null,SRV()?"Check the viewer's port ("+(s.remote_port||8788)+") is reachable: with Docker, use host networking or publish that port too.":"Printrment must be running on this PC, and the PC awake. With the window closed it only keeps running if \"Closing the window hides Printrment in the tray\" is on (Settings > App)."),
     h("li",null,"Check the firewall step above, and that the other device is on the same network."),
     h("li",null,"The address can change if your router gives this PC a new IP address. Check it here again."),
     h("li",null,"5 wrong PINs from one device lock it out for 15 minutes."),
@@ -1110,13 +1110,25 @@ function renderSettings(){
     h("li",null,"\"New PIN\" signs every other device out straight away."),
     h("li",null,"Turn remote access off when you don't need it."))));
  }else if(setTab==="app"){
+  if(SRV()){
+   const cur=h("input",{type:"password",autocomplete:"current-password"}),nw=h("input",{type:"password",autocomplete:"new-password"}),nw2=h("input",{type:"password",autocomplete:"new-password"});
+   out.push(h("h4",null,"App"),h("p",{class:"sub"},"Printrment is running as a server. Everyone who opens it signs in with the admin password."),
+    S.admin_env?h("div",{class:"note",text:"The admin password is set by the server's PRINTRMENT_ADMIN_PASSWORD setting. Change it there and restart Printrment."}):
+    h("div",{class:"box"},h("b",null,"Change the admin password"),
+     field("Current password",cur),field("New password (at least 10 characters)",nw),field("New password again",nw2),
+     h("button",{class:"pri",onclick:()=>changePassword(cur.value,nw.value,nw2.value)},"Change password"),
+     pwNote?h("div",{class:"note "+(pwNote.ok?"ok":"err"),style:"margin-top:8px",text:pwNote.text}):null,
+     h("div",{class:"mut",style:"margin-top:6px;font-size:12px",text:"Changing it signs out every other browser."})),
+    h("form",{method:"post",action:"/logout",style:"margin-top:10px"},h("button",null,"Sign out")));
+  }else
   out.push(h("h4",null,"App"),h("p",{class:"sub"},"How Printrment starts and closes."),
-   h("div",{class:"box"},sw("Closing the window hides Printrment in the tray","tray","Off (default): the close button quits Printrment completely. On: it keeps running in the tray by the clock, so alerts and timelapses carry on - right-click the tray icon and choose Quit to close it fully."+(LIN()?" Fedora's GNOME desktop only shows tray icons with the AppIndicator extension: sudo dnf install gnome-shell-extension-appindicator, then sign out and back in. KDE shows them already.":"")),sw(LIN()?"Start when I sign in":"Start with Windows","autostart","Starts quietly in the tray when you sign in. If you move "+(LIN()?"Printrment":"Printrment.exe")+", turn this off and on again.")),
+   h("div",{class:"box"},sw("Closing the window hides Printrment in the tray","tray","Off (default): the close button quits Printrment completely. On: it keeps running in the tray by the clock, so alerts and timelapses carry on - right-click the tray icon and choose Quit to close it fully."+(LIN()?" Fedora's GNOME desktop only shows tray icons with the AppIndicator extension: sudo dnf install gnome-shell-extension-appindicator, then sign out and back in. KDE shows them already.":"")),sw(LIN()?"Start when I sign in":"Start with Windows","autostart","Starts quietly in the tray when you sign in. If you move "+(LIN()?"Printrment":"Printrment.exe")+", turn this off and on again.")));
+  out.push(
    h("h4",{style:"margin-top:18px"},"Back up your settings"),
    h("p",{class:"sub"},"Saves your printers, theme and options to a file, to set up another PC or after a reinstall. Access codes, the remote access PIN and printer certificates are left out - you enter the codes again after importing."),
    h("div",{style:"display:flex;gap:8px;flex-wrap:wrap"},h("button",{onclick:exportSettings},"Export settings"),h("button",{onclick:()=>$("#impfile").click()},"Import settings...")),
    backupNote?h("div",{class:"note "+(backupNote.ok?"ok":"err"),style:"margin-top:8px",text:backupNote.text}):null,
-   h("div",{class:"mut",style:"margin-top:14px"},"Version "+(S?S.version:"")),native?null:h("button",{style:"margin-top:12px",onclick:()=>$("#bquit").click()},"Quit Printrment"));
+   h("div",{class:"mut",style:"margin-top:14px"},"Version "+(S?S.version:"")),native||SRV()?null:h("button",{style:"margin-top:12px",onclick:()=>$("#bquit").click()},"Quit Printrment"));
  }else if(setTab==="about"){
   const li3=(n,d,l)=>h("li",null,h("b",{text:n}),h("div",{text:d}),h("div",{class:"mut",style:"font-size:11px",text:l}));
   out.push(h("div",{class:"about"},
@@ -1156,6 +1168,14 @@ function renderSettings(){
  b.replaceChildren(...out.filter(Boolean));
 }
 const LIN=()=>!!(S&&S.os==="linux");
+const SERVER_PAGE={{SERVER}};
+const SRV=()=>SERVER_PAGE||!!(S&&S.server);
+// show a saved picture / timelapse: the file manager on the desktop, a browser tab on a server
+function showFile(path){if(SRV())window.open("/media?path="+encodeURIComponent(path),"_blank","noopener");else api("/api/openfolder",{which:"file",path:path}).catch(()=>{})}
+const sndCache={};function playSnd(k){if(!SRV())return;try{const a=sndCache[k]||(sndCache[k]=new Audio("/sound?kind="+encodeURIComponent(k)));a.currentTime=0;a.play().catch(()=>{})}catch(e){}}
+let pwNote=null;
+async function changePassword(cur,nw,nw2){if(nw!==nw2){pwNote={ok:false,text:"The new passwords don't match."};renderSettings();return}
+ try{const r=await api("/api/adminpassword",{current:cur,new:nw});pwNote=r.ok?{ok:true,text:"Password changed."}:{ok:false,text:r.reason}}catch(e){pwNote={ok:false,text:String(e.message||e)}}renderSettings()}
 let backupNote=null,guideOpen=null,remoteNote=null;
 async function openRemote(){try{const r=await api("/api/openremote",{});remoteNote=r.ok?{ok:true,text:"Opened in your browser."}:{ok:false,text:r.reason}}catch(e){remoteNote={ok:false,text:String(e.message||e)}}renderSettings();setTimeout(()=>{remoteNote=null;if(setTab==="phone")renderSettings()},4000)}
 async function exportSettings(){try{const r=await fetch("/api/export",{headers:HDR});if(!r.ok)throw new Error(await r.text());
@@ -1173,7 +1193,7 @@ async function savePrinter(){const e=editP;e.err="";if(!e.ip||(!e.code&&!e.id)){
   if(wasNew&&S&&S.printers.length===1)closeSettings()}catch(x){e.err=String(x.message||x);renderSettings()}}
 
 $("#impfile").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)importSettings(f)};
-if(!T&&location.port==="8787"){document.body.replaceChildren(h("div",{style:"margin:auto;max-width:420px;padding:24px;text-align:center;font:15px system-ui;color:#c9ced6"},
+if(!T&&!SERVER_PAGE&&location.port==="8787"){document.body.replaceChildren(h("div",{style:"margin:auto;max-width:420px;padding:24px;text-align:center;font:15px system-ui;color:#c9ced6"},
   h("b",null,"Open Printrment from its own window"),h("p",null,"For security, this page only works inside the Printrment window. Start Printrment from the Start menu, the desktop or the tray icon.")));document.body.style.display="flex";document.body.style.background="#0b0d10"}
 else loadSettings().then(()=>{poll();setInterval(poll,1000)});
 </script>`

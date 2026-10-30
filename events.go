@@ -20,6 +20,7 @@ type Event struct {
 	Kind    string `json:"kind"`  // alert | activity
 	Level   string `json:"level"` // info | success | warn | error
 	Text    string `json:"text"`
+	Sound   string `json:"sound,omitempty"` // server mode: the browser plays it
 }
 
 var (
@@ -36,8 +37,21 @@ func emit(printerID, kind, level, text string) {
 	if p, ok := cfg.printer(printerID); ok {
 		name = p.Name
 	}
+	sound := ""
+	if kind == "alert" {
+		s := cfg.get()
+		switch {
+		case level == "success" && s.SoundFinished:
+			sound = "finished"
+		case (level == "warn" || level == "error") && s.SoundProblems:
+			sound = level
+		}
+	}
 	evMu.Lock()
 	e := Event{ID: evNextID, Time: time.Now().UnixMilli(), Printer: printerID, Name: name, Kind: kind, Level: level, Text: text}
+	if serverMode {
+		e.Sound = sound // no speakers on a server: the page plays it
+	}
 	evNextID++
 	evList = append(evList, e)
 	if len(evList) > 300 {
@@ -47,13 +61,10 @@ func emit(printerID, kind, level, text string) {
 	appendLog(kind + " [" + level + "] " + name + ": " + text)
 	if kind == "alert" {
 		s := cfg.get()
-		switch {
-		case level == "success" && s.SoundFinished:
-			go playSound("finished")
-		case (level == "warn" || level == "error") && s.SoundProblems:
-			go playSound(level)
+		if sound != "" && !serverMode {
+			go playSound(sound)
 		}
-		if s.NotifyFlash {
+		if s.NotifyFlash && !serverMode {
 			go flashWindow()
 		}
 	}

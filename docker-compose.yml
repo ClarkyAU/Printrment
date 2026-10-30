@@ -1,0 +1,26 @@
+# Printrment on Docker or TrueNAS (Apps > Discover Apps > ⋮ > Install via YAML).
+# Change the volume path and time zone to suit, then deploy.
+services:
+  printrment:
+    image: ghcr.io/clarkyau/printrment:latest
+    container_name: printrment
+    restart: unless-stopped
+    # Host networking lets Printrment find printers on your network and
+    # shows the right address for the remote access viewer. Uses ports
+    # 8787 (the app) and 8788 (remote access viewer) on the host.
+    network_mode: host
+    user: "568:568"
+    environment:
+      TZ: Australia/Sydney
+      # Optional: fix the admin password here instead of using the one
+      # printed in the log on first start (at least 10 characters).
+      # PRINTRMENT_ADMIN_PASSWORD: "change-me-please"
+      # Optional: a different port for the app (default 8787).
+      # PRINTRMENT_PORT: "8787"
+    volumes:
+      # settings, encryption key, snapshots, timelapses, cache
+      - /mnt/tank/apps/printrment:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

@@ -20,7 +20,7 @@ import (
 )
 
 const listenAddr = "127.0.0.1:8787"
-const version = "0.30"
+const version = "0.31"
 
 var (
 	lastActivity   time.Time
@@ -75,7 +75,8 @@ func newMux() *http.ServeMux {
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")
-		io.WriteString(w, strings.Replace(page, "{{VERSION}}", version, -1))
+		pg := strings.Replace(page, "{{VERSION}}", version, -1)
+		io.WriteString(w, strings.Replace(pg, "{{SERVER}}", strconv.FormatBool(serverMode), 1))
 	})
 
 	mux.HandleFunc("/fonts/", serveFont)
@@ -83,6 +84,7 @@ func newMux() *http.ServeMux {
 	registerFileHandlers(mux)
 	registerCheckHandler(mux)
 	registerBackupHandlers(mux)
+	registerServerHandlers(mux)
 
 	mux.HandleFunc("/api/version", func(w http.ResponseWriter, r *http.Request) { io.WriteString(w, version) })
 
@@ -127,6 +129,7 @@ func newMux() *http.ServeMux {
 		}
 		writeJSON(w, map[string]any{
 			"version": version, "os": runtime.GOOS, "remote": isRemote(r), "active": s.Active,
+			"server": serverMode, "admin_env": serverMode && envPassword() != "",
 			"printers": ps, "events": evs, "last_event": last,
 			"remote_controls": s.RemoteControls, "theme": s.Theme,
 		})
@@ -401,7 +404,15 @@ func newMux() *http.ServeMux {
 			}
 			applySettings()
 		}
-		writeJSON(w, settingsView())
+		v := settingsView()
+		if serverMode {
+			// The server can't see its own outside address (Docker), but the
+			// browser just reached it: the viewer is on the same host.
+			if host, _, err := net.SplitHostPort(r.Host); err == nil && host != "" {
+				v["remote_urls"] = []string{fmt.Sprintf("http://%s:%d", host, cfg.get().RemotePort)}
+			}
+		}
+		writeJSON(w, v)
 	}))
 
 	mux.HandleFunc("/api/printer", localOnly(func(w http.ResponseWriter, r *http.Request) {
@@ -650,6 +661,7 @@ func settingsView() map[string]any {
 	for i := range s.Printers {
 		s.Printers[i].Code, s.Printers[i].Pins = "", nil
 	}
+	s.Secret, s.AdminHash = "", "" // never needed by the page
 	var urls []string
 	for _, ip := range lanIPs() {
 		urls = append(urls, fmt.Sprintf("http://%s:%d", ip, s.RemotePort))

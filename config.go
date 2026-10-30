@@ -64,6 +64,9 @@ type Settings struct {
 	RemoteControls bool   `json:"remote_controls"`  // allow pause/stop etc. from the phone
 	Secret         string `json:"secret,omitempty"` // signs the phone login cookie
 
+	// Server mode only: the admin password as a PBKDF2 hash (never the password).
+	AdminHash string `json:"admin_hash,omitempty"`
+
 	// encrypted copies of RemotePIN / Secret, as stored on disk
 	RemotePINEnc string `json:"remote_pin_enc,omitempty"`
 	SecretEnc    string `json:"secret_enc,omitempty"`
@@ -78,6 +81,11 @@ type store struct {
 var cfg = &store{}
 
 func dataDir() string {
+	if d := os.Getenv("PRINTRMENT_DATA"); d != "" { // server / Docker
+		p := filepath.Join(d, "config")
+		os.MkdirAll(p, 0o700)
+		return p
+	}
 	d, err := os.UserConfigDir()
 	if err != nil {
 		d = os.TempDir()
@@ -105,9 +113,15 @@ func (st *store) applyDefaults() {
 	home, _ := os.UserHomeDir()
 	if s.SnapshotDir == "" {
 		s.SnapshotDir = filepath.Join(home, "Pictures", "Printrment")
+		if d := os.Getenv("PRINTRMENT_DATA"); d != "" {
+			s.SnapshotDir = filepath.Join(d, "snapshots")
+		}
 	}
 	if s.TimelapseDir == "" {
 		s.TimelapseDir = filepath.Join(home, "Videos", "Printrment")
+		if d := os.Getenv("PRINTRMENT_DATA"); d != "" {
+			s.TimelapseDir = filepath.Join(d, "timelapses")
+		}
 	}
 	if s.TimelapseMode != "interval" {
 		s.TimelapseMode = "layer"
