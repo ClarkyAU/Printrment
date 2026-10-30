@@ -1,8 +1,11 @@
 name: Release
 
-# Push a tag like v0.31 to build the Windows exe and the Fedora .rpm and
-# publish them as a GitHub Release. (The Docker image is built by docker.yml.)
+# Builds the Windows exe and the Fedora .rpm and publishes them as a GitHub
+# Release for the version in cmd/printrment/server.go. Start it from the
+# Actions tab (Release > Run workflow), or push a tag like v0.31.
+# (The Docker image is built by docker.yml.)
 on:
+  workflow_dispatch:
   push:
     tags: ["v*"]
 
@@ -20,10 +23,19 @@ jobs:
           go-version: "1.27.3"
           cache: false
 
-      - name: Check the tag matches the app version
+      - name: Work out the version
+        id: v
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           v=$(sed -n 's/^const version = "\(.*\)"/\1/p' cmd/printrment/server.go)
-          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME doesn't match version $v"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$v" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME doesn't match version $v"; exit 1
+          fi
+          if gh release view "v$v" >/dev/null 2>&1; then
+            echo "Release v$v already exists - bump the version first"; exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
 
       - name: Test
         run: GOFLAGS=-mod=mod GOPROXY=off go test ./cmd/printrment
@@ -37,7 +49,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          v=${GITHUB_REF_NAME#v}
+          v=${{ steps.v.outputs.version }}
           cat > notes.md <<NOTES
           **Downloads**
           - **Windows:** \`Printrment.exe\`, just run it
@@ -45,5 +57,5 @@ jobs:
           - **Docker / TrueNAS:** \`ghcr.io/clarkyau/printrment:$v\` ([setup]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/docker-truenas.md))
           NOTES
           sha256sum build/Printrment.exe build/printrment-*.rpm | sed 's#build/##' > build/SHA256SUMS.txt
-          gh release create "$GITHUB_REF_NAME" --title "Printrment $v" --notes-file notes.md \
+          gh release create "v$v" --target "$GITHUB_SHA" --title "Printrment $v" --notes-file notes.md \
             build/Printrment.exe build/printrment-*.rpm build/SHA256SUMS.txt

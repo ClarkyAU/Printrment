@@ -27,12 +27,7 @@ stays as tested. Raising it tightens some TLS defaults; test against a real prin
 
 1. Set the new version in `cmd/printrment/server.go` (`const version`) and push to `main`.
    GitHub Actions publishes the Docker image (`latest` and the version).
-2. Tag it and push the tag:
-
-   ```sh
-   git tag v0.32 && git push origin v0.32
-   ```
-
+2. On GitHub, open **Actions > Release > Run workflow** (or push a tag such as `v0.32`).
    GitHub Actions tests, builds `Printrment.exe` and the Fedora `.rpm`, and publishes them as a
    Release with their SHA-256 checksums.
 
