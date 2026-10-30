@@ -32,7 +32,7 @@ By Clarky3D, with Claude (Anthropic's AI assistant).
 - [Docker and TrueNAS](docs/docker-truenas.md): server mode, setup, settings
 - [Fedora Linux](docs/fedora.md): install notes
 - [Security](docs/security.md): how access, secrets and the printer connection are protected
-- [Development](docs/development.md): building, source layout, testing with the mock printer
+- [Development](docs/development.md): building, releasing, source layout, testing with the mock printer
 - [Licences](docs/licences.md): third-party components
 
 ## Repository

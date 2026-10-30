@@ -1,0 +1,49 @@
+name: Release
+
+# Push a tag like v0.31 to build the Windows exe and the Fedora .rpm and
+# publish them as a GitHub Release. (The Docker image is built by docker.yml.)
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.3"
+          cache: false
+
+      - name: Check the tag matches the app version
+        run: |
+          v=$(sed -n 's/^const version = "\(.*\)"/\1/p' cmd/printrment/server.go)
+          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME doesn't match version $v"; exit 1; }
+
+      - name: Test
+        run: GOFLAGS=-mod=mod GOPROXY=off go test ./cmd/printrment
+
+      - name: Build
+        run: |
+          pip install --quiet nfpm==2.48.0
+          scripts/build.sh
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v=${GITHUB_REF_NAME#v}
+          cat > notes.md <<NOTES
+          **Downloads**
+          - **Windows:** \`Printrment.exe\`, just run it
+          - **Fedora Linux:** \`printrment-$v.0-1.x86_64.rpm\`, then \`sudo dnf install ./printrment-$v.0-1.x86_64.rpm\` ([notes]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/fedora.md))
+          - **Docker / TrueNAS:** \`ghcr.io/clarkyau/printrment:$v\` ([setup]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/docker-truenas.md))
+          NOTES
+          sha256sum build/Printrment.exe build/printrment-*.rpm | sed 's#build/##' > build/SHA256SUMS.txt
+          gh release create "$GITHUB_REF_NAME" --title "Printrment $v" --notes-file notes.md \
+            build/Printrment.exe build/printrment-*.rpm build/SHA256SUMS.txt

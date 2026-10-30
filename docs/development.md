@@ -23,6 +23,19 @@ GOFLAGS=-mod=mod GOPROXY=off go test ./cmd/printrment
 `go.mod` keeps the `go 1.24` language level on purpose, so TLS behaviour towards the printer
 stays as tested. Raising it tightens some TLS defaults; test against a real printer first.
 
+## Releasing
+
+1. Set the new version in `cmd/printrment/server.go` (`const version`) and push to `main`.
+   GitHub Actions publishes the Docker image (`latest` and the version).
+2. Tag it and push the tag:
+
+   ```sh
+   git tag v0.32 && git push origin v0.32
+   ```
+
+   GitHub Actions tests, builds `Printrment.exe` and the Fedora `.rpm`, and publishes them as a
+   Release with their SHA-256 checksums.
+
 ## Source layout
 
 All the app code is one Go package in `cmd/printrment/`:
