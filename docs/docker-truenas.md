@@ -15,8 +15,9 @@ including the PIN-protected remote access viewer (port 8788). Alert sounds play 
    change the volume path and `TZ`, and deploy.
 3. Open the app's **Logs**: the first start prints the admin password (also saved as
    `initial-admin-password.txt` in the dataset until you change it).
-4. Browse to `http://<truenas>:8787`, sign in, add your printer, and change the password under
-   Settings > App.
+4. Open it with the app's **Web Portal** button, or browse to `http://<truenas>:8787` (your
+   TrueNAS address with `:8787` on the end). Sign in, add your printer, and change the password
+   under Settings > App.
 
 ### Plain Docker
 

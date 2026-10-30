@@ -24,3 +24,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+
+# TrueNAS: adds the "Web Portal" button on the app's page (ignored by plain Docker).
+x-portals:
+  - name: Web Portal
+    scheme: http
+    host: 0.0.0.0
+    port: 8787
+    path: /
