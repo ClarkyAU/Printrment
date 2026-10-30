@@ -155,7 +155,7 @@ func listenSSDP(ctx context.Context, add func(Found)) (int, int) {
 }
 
 func probeSubnets(ctx context.Context, add func(Found)) int {
-	allowLo := os.Getenv("BAMBUCAM_SCAN_LO") != ""
+	allowLo := os.Getenv("PRINTRMENT_SCAN_LO") != ""
 	seen := map[string]bool{}
 	var targets []string
 	addrs, _ := net.InterfaceAddrs()

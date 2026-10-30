@@ -70,7 +70,7 @@ func (r *rtspConn) authHeader(method, uri string) string {
 		if strings.Contains(p["qop"], "auth") {
 			r.nc++
 			nc := fmt.Sprintf("%08x", r.nc)
-			cn := "bambucam"
+			cn := "printrment"
 			resp = md5hex(ha1 + ":" + p["nonce"] + ":" + nc + ":" + cn + ":auth:" + ha2)
 			extra = fmt.Sprintf(`, qop=auth, nc=%s, cnonce="%s"`, nc, cn)
 		} else {
@@ -417,7 +417,7 @@ func (c *Camera) runRTSP(ctx context.Context, cfg Printer) (bool, error) {
 
 	// --- ffmpeg: raw H.264 in, JPEG frames out
 	var ffargs []string
-	if os.Getenv("BAMBUCAM_FFDEBUG") != "" {
+	if os.Getenv("PRINTRMENT_FFDEBUG") != "" {
 		ffargs = append(ffargs, "-loglevel", "info")
 	} else {
 		ffargs = append(ffargs, "-loglevel", "error")

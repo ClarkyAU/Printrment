@@ -7,8 +7,8 @@ WORKDIR /src
 COPY . .
 # Everything the build needs is in the repo (third_party/), so no downloads.
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOFLAGS=-mod=mod GOPROXY=off
-RUN go vet . && go test . && \
-    go build -trimpath -ldflags "-s -w" -o /out/printrment . && \
+RUN go vet ./cmd/printrment && go test ./cmd/printrment && \
+    go build -trimpath -ldflags "-s -w" -o /out/printrment ./cmd/printrment && \
     mkdir -p /out/data
 
 # Nothing but the app: no shell, no package manager. The app carries its own

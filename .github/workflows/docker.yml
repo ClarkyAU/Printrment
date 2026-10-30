@@ -17,7 +17,7 @@ jobs:
 
       - name: Read version
         id: v
-        run: echo "version=$(sed -n 's/^const version = "\(.*\)"/\1/p' server.go)" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(sed -n 's/^const version = "\(.*\)"/\1/p' cmd/printrment/server.go)" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 

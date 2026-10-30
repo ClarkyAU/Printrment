@@ -201,7 +201,7 @@ func playSound(kind string) {
 	if wav == nil {
 		return
 	}
-	if d := os.Getenv("BAMBUCAM_SOUNDLOG"); d != "" { // tests
+	if d := os.Getenv("PRINTRMENT_SOUNDLOG"); d != "" { // tests
 		if f, err := os.OpenFile(d, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644); err == nil {
 			f.WriteString(kind + "\n")
 			f.Close()

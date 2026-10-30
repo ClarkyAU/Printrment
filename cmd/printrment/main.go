@@ -43,7 +43,7 @@ func fileSHA256(p string) string {
 // checks it is byte-for-byte the copy built into Printrment before running it.
 // A damaged or swapped file is replaced.
 func getFFmpeg() (string, error) {
-	if p := os.Getenv("BAMBUCAM_FFMPEG"); p != "" {
+	if p := os.Getenv("PRINTRMENT_FFMPEG"); p != "" {
 		return p, nil
 	}
 	ffmpegOnce.Do(func() {

@@ -7,7 +7,7 @@ import _ "embed"
 // FFmpeg 7.0.2 for Linux x86-64 (static GPL v3 build with x264, by John Van
 // Sickle), from imageio-ffmpeg 0.7.0.
 //
-//go:embed ffmpeg-linux.gz
+//go:embed assets/ffmpeg-linux.gz
 var ffmpegGz []byte
 
 // SHA-256 of the unpacked file (checked by TestFFmpegHash, so it can't drift).

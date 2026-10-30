@@ -1,8 +1,8 @@
 # build output
-*.exe
 build/
-# mock tool binaries, test certificates, test video
-devtools/mockmqtt/mockmqtt
-devtools/mockftp/mockftp
+*.exe
+# mock printer: binaries, test certificates, test video
+tools/mock-printer/mqtt/mockmqtt
+tools/mock-printer/ftp/mockftp
+tools/mock-printer/camera/t.h264
 *.pem
-devtools/rtspmock/t.h264

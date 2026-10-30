@@ -6,7 +6,7 @@ import _ "embed"
 
 // FFmpeg 7.1 for Windows (GPL v3 build with x264), from imageio-ffmpeg 0.7.0.
 //
-//go:embed ffmpeg.exe.gz
+//go:embed assets/ffmpeg.exe.gz
 var ffmpegGz []byte
 
 // SHA-256 of the unpacked file (checked by TestFFmpegHash, so it can't drift).

@@ -10,7 +10,7 @@ import (
 // The Clarky3D theme's fonts (SIL Open Font License), built in so the theme
 // looks right offline too.
 //
-//go:embed fonts/*.woff2
+//go:embed assets/fonts/*.woff2
 var fontFS embed.FS
 
 func serveFont(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +19,7 @@ func serveFont(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	b, err := fontFS.ReadFile("fonts/" + name)
+	b, err := fontFS.ReadFile("assets/fonts/" + name)
 	if err != nil {
 		http.NotFound(w, r)
 		return

@@ -26,7 +26,7 @@ func TestFFmpegHash(t *testing.T) {
 }
 
 func TestFFmpegTamperedCopyIsReplaced(t *testing.T) {
-	t.Setenv("BAMBUCAM_FFMPEG", "")
+	t.Setenv("PRINTRMENT_FFMPEG", "")
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("XDG_CACHE_HOME", "")
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
