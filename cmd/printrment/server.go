@@ -20,7 +20,7 @@ import (
 )
 
 const listenAddr = "127.0.0.1:8787"
-const version = "0.32"
+const version = "0.33"
 
 var (
 	lastActivity   time.Time
@@ -251,6 +251,10 @@ func newMux() *http.ServeMux {
 	})
 
 	mux.HandleFunc("/api/retry", func(w http.ResponseWriter, r *http.Request) {
+		if isRemote(r) && !cfg.get().RemoteControls {
+			http.Error(w, "controls are turned off for other devices", 403)
+			return
+		}
 		getCam(r.URL.Query().Get("id")).retryNow()
 		if m := getMon(r.URL.Query().Get("id")); m != nil {
 			select {
@@ -409,7 +413,7 @@ func newMux() *http.ServeMux {
 			// The server can't see its own outside address (Docker), but the
 			// browser just reached it: the viewer is on the same host.
 			if host, _, err := net.SplitHostPort(r.Host); err == nil && host != "" {
-				v["remote_urls"] = []string{fmt.Sprintf("http://%s:%d", host, cfg.get().RemotePort)}
+				v["remote_urls"] = []string{fmt.Sprintf("%s://%s:%d", scheme(), host, cfg.get().RemotePort)}
 			}
 		}
 		writeJSON(w, v)
@@ -704,8 +708,7 @@ func localGuard(next http.Handler) http.Handler {
 		if r.URL.Path != "/api/closing" {
 			touch()
 		}
-		w.Header().Set("X-Frame-Options", "DENY")
-		w.Header().Set("Referrer-Policy", "no-referrer")
+		securityHeaders(w.Header())
 		next.ServeHTTP(w, r)
 	})
 }
@@ -731,8 +734,7 @@ func remoteGuard(next http.Handler) http.Handler {
 		}
 		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 		r = r.WithContext(context.WithValue(r.Context(), remoteKey, true))
-		w.Header().Set("X-Frame-Options", "DENY")
-		w.Header().Set("Referrer-Policy", "no-referrer")
+		securityHeaders(w.Header())
 		if r.URL.Path == "/login" && r.Method == http.MethodPost {
 			if logins.blocked(ip) {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -744,7 +746,7 @@ func remoteGuard(next http.Handler) http.Handler {
 			if hmac.Equal([]byte(r.PostForm.Get("pin")), []byte(s.RemotePIN)) {
 				logins.ok(ip)
 				http.SetCookie(w, &http.Cookie{Name: "bc_auth", Value: pinCookie(s), Path: "/", HttpOnly: true,
-					SameSite: http.SameSiteStrictMode, MaxAge: 60 * 60 * 24 * 90})
+					SameSite: http.SameSiteStrictMode, Secure: r.TLS != nil, MaxAge: 60 * 60 * 24 * 90})
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 				return
 			}
@@ -814,7 +816,7 @@ func applyRemote(mux http.Handler) {
 		remoteErr = ""
 		remotePort = s.RemotePort
 		remoteSrv = newServer(remoteGuard(mux))
-		go remoteSrv.Serve(ln)
+		go serve(remoteSrv, ln)
 	}
 }
 

@@ -10,6 +10,10 @@
   never exposes printer files, settings or (unless allowed) controls.
 - FFmpeg is verified by SHA-256 before every run and limited to pipe/file inputs.
 - Commands the printer refuses without Developer Mode are never sent.
+- Every page is served with a Content-Security-Policy (own origin only, no framing, no plugins),
+  `nosniff` and no-referrer headers.
+- Replies from the printer are read with size limits (lines, headers, messages, downloads), so a
+  misbehaving device on the network can't use up the app's memory.
 
 ## Server mode (Docker / TrueNAS)
 
@@ -20,6 +24,8 @@
 - Sign-in cookie is signed, HttpOnly, SameSite=Strict and expires after 30 days; changing the
   password signs everyone out. Five wrong passwords lock that device out for 15 minutes.
 - Every API call needs Printrment's own header, so other websites can't drive it.
+- Plain HTTP by default (fine on a trusted home network); `PRINTRMENT_HTTPS=1` or your own
+  certificate turns on HTTPS with Secure cookies. See [Docker and TrueNAS](docker-truenas.md).
 - Desktop-only actions (quit, window, file manager) don't exist on the server.
 - The image contains only the app (no shell or OS) and runs as an unprivileged user.
 

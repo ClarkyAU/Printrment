@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
@@ -202,6 +203,13 @@ func (g *loginGuard) blocked(ip string) bool {
 
 func (g *loginGuard) fail(ip string) {
 	g.mu.Lock()
+	if len(g.perIP) > 256 { // forget addresses whose lockout has run out
+		for k, ts := range g.perIP {
+			if len(recent(ts, 15*time.Minute)) == 0 {
+				delete(g.perIP, k)
+			}
+		}
+	}
 	g.perIP[ip] = append(recent(g.perIP[ip], 15*time.Minute), time.Now())
 	g.all = append(recent(g.all, 15*time.Minute), time.Now())
 	n, total := len(g.perIP[ip]), len(g.all)
@@ -248,6 +256,27 @@ func insideDir(file, dir string) bool {
 }
 
 // ---------------------------------------------------------------- misc
+
+var errLineTooLong = errors.New("the printer sent an unreasonably long line")
+
+// readLineMax reads one line, refusing lines longer than max bytes, so a
+// device that never ends a line can't make Printrment use up memory.
+func readLineMax(br *bufio.Reader, max int) (string, error) {
+	var out []byte
+	for {
+		frag, err := br.ReadSlice('\n')
+		out = append(out, frag...)
+		if len(out) > max {
+			return "", errLineTooLong
+		}
+		if err == nil {
+			return string(out), nil
+		}
+		if err != bufio.ErrBufferFull {
+			return "", err
+		}
+	}
+}
 
 // tailBuf keeps the last few KB a helper program wrote to its error output.
 // It is safe to read while the program is still writing.

@@ -89,11 +89,14 @@ func (f *ftpClient) Close() {
 	}
 }
 
+// maxTransfer is the most Printrment accepts when no size was asked for.
+const maxTransfer = 64 << 20
+
 func (f *ftpClient) read() (int, string, error) { return f.readT(20 * time.Second) }
 
 func (f *ftpClient) readT(d time.Duration) (int, string, error) {
 	f.conn.SetReadDeadline(time.Now().Add(d))
-	line, err := f.r.ReadString('\n')
+	line, err := readLineMax(f.r, 8<<10)
 	if err != nil {
 		return 0, "", err
 	}
@@ -108,8 +111,11 @@ func (f *ftpClient) readT(d time.Duration) (int, string, error) {
 	msg := line
 	if len(line) > 3 && line[3] == '-' { // multi-line reply
 		end := line[:3] + " "
-		for {
-			l, err := f.r.ReadString('\n')
+		for n := 0; ; n++ {
+			if n > 200 {
+				return 0, "", fmt.Errorf("the printer's storage sent too long a reply")
+			}
+			l, err := readLineMax(f.r, 8<<10)
 			if err != nil {
 				return 0, "", err
 			}
@@ -187,7 +193,7 @@ func (f *ftpClient) transfer(c string, limit int64) ([]byte, error) {
 	if limit > 0 {
 		b, err = io.ReadAll(io.LimitReader(dc, limit))
 	} else {
-		b, err = io.ReadAll(dc)
+		b, err = io.ReadAll(io.LimitReader(dc, maxTransfer)) // listings and file tails are small
 	}
 	if err != nil && len(b) == 0 {
 		return nil, err

@@ -18,6 +18,7 @@ import (
 	"crypto/pbkdf2"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -179,9 +180,7 @@ func adminGuard(next http.Handler) http.Handler {
 			http.Error(w, "only available on your local network", 403)
 			return
 		}
-		w.Header().Set("X-Frame-Options", "DENY")
-		w.Header().Set("Referrer-Policy", "no-referrer")
-		w.Header().Set("X-Content-Type-Options", "nosniff")
+		securityHeaders(w.Header())
 		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 		switch {
 		case r.URL.Path == "/api/version" || strings.HasPrefix(r.URL.Path, "/fonts/"):
@@ -426,9 +425,9 @@ func runServer() {
 		cfg.update(func(s *Settings) { s.RemotePort = port + 1 })
 	}
 	applySettings()
-	go newServer(adminGuard(mux)).Serve(ln)
+	go serve(newServer(adminGuard(mux)), ln)
 	appendLog(fmt.Sprintf("server mode: listening on port %d", port))
-	fmt.Printf("Printrment %s running. Open http://<this machine's address>:%d in a browser on your home network.\n", version, port)
+	fmt.Printf("Printrment %s running. Open %s://<this machine's address>:%d in a browser on your home network.\n", version, scheme(), port)
 
 	// docker stop / Ctrl+C: finish timelapses and close printer connections properly
 	sig := make(chan os.Signal, 1)
@@ -472,8 +471,10 @@ func mediaFile(p string) (string, bool) {
 
 // healthcheck is "printrment --healthcheck" for Docker's HEALTHCHECK.
 func healthcheck() {
-	c := http.Client{Timeout: 4 * time.Second}
-	r, err := c.Get(fmt.Sprintf("http://127.0.0.1:%d/api/version", serverPort()))
+	// The check only ever talks to this same container, so a self-made
+	// certificate isn't verified here.
+	c := http.Client{Timeout: 4 * time.Second, Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}
+	r, err := c.Get(fmt.Sprintf("%s://127.0.0.1:%d/api/version", scheme(), serverPort()))
 	if err != nil {
 		os.Exit(1)
 	}

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -72,5 +74,19 @@ func TestLoginGuard(t *testing.T) {
 	}
 	if !g.blocked("9.9.9.9") {
 		t.Fatal("global lockout after 20 didn't trigger")
+	}
+}
+
+func TestReadLineMax(t *testing.T) {
+	br := bufio.NewReaderSize(strings.NewReader("220 hello\r\n"+strings.Repeat("x", 100000)+"\n"), 4096)
+	if l, err := readLineMax(br, 8<<10); err != nil || l != "220 hello\r\n" {
+		t.Fatalf("normal line: %q %v", l, err)
+	}
+	if _, err := readLineMax(br, 8<<10); err == nil {
+		t.Fatal("a 100 KB line was accepted")
+	}
+	// a reply that never ends its line
+	if _, err := readLineMax(bufio.NewReader(strings.NewReader(strings.Repeat("y", 50000))), 8<<10); err == nil {
+		t.Fatal("endless line was accepted")
 	}
 }

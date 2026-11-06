@@ -17,6 +17,9 @@ services:
       # PRINTRMENT_ADMIN_PASSWORD: "change-me-please"
       # Optional: a different port for the app (default 8787).
       # PRINTRMENT_PORT: "8787"
+      # Optional: HTTPS with a self-made certificate (browsers warn once).
+      # If you turn this on, also change "scheme" below to https.
+      # PRINTRMENT_HTTPS: "1"
     volumes:
       # settings, encryption key, snapshots, timelapses, cache
       - /mnt/tank/apps/printrment:/data

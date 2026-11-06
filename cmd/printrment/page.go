@@ -1201,7 +1201,7 @@ function renderSettings(){
    h("h5",null,"Printer protocols"),
    h("p",{class:"mut"},"Printrment talks to your printer the same way other local tools do: MQTT over TLS for status and commands, RTSPS for the camera, FTPS for files. These are standard protocols; the Bambu-specific message formats were worked out from the printer's own behaviour and public community documentation."),
    h("h5",null,"Licences"),
-   h("p",{class:"mut"},"FFmpeg and x264 are free software under the GNU General Public License. You can get their source code, and the licence texts, from ffmpeg.org and videolan.org. The other components are used under the licences named above; full texts are available from each project. Printrment itself is provided as is, with no warranty."),
+   h("p",{class:"mut"},"FFmpeg and x264 are free software under the GNU General Public License. You can get their source code, and the licence texts, from ffmpeg.org (ffmpeg.org/releases) and videolan.org (code.videolan.org/videolan/x264); the exact versions are listed above. The other components are used under the licences named above; full texts are available from each project. Printrment itself is provided as is, with no warranty."),
    h("h5",null,"Your data"),
    h("p",{class:"mut"},LIN()?"Settings, printer details and logs are stored in your home folder (~/.config/Printrment). Access codes and PINs are encrypted with a key kept separately (~/.local/share/Printrment), readable only by you. Nothing is uploaded anywhere.":"Settings, printer details and logs are stored on this PC in your Windows user profile. Access codes and PINs are encrypted with Windows. Nothing is uploaded anywhere."),
    h("h5",null,"Good to know"),

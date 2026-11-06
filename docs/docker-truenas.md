@@ -40,8 +40,21 @@ compiled app, not the source code.
 | `PRINTRMENT_ADMIN_PASSWORD` | (generated) | Fixes the admin password (10+ characters); it then can't be changed in the app |
 | `PRINTRMENT_PORT` | `8787` | Port for the app |
 | `PRINTRMENT_KEY_FILE` | `/data/key/secret.key` | Encryption key for saved access codes; point it at a separate mount to keep it apart from the data |
+| `PRINTRMENT_HTTPS` | off | Set to `1` to serve the app and the phone viewer over HTTPS (see below) |
+| `PRINTRMENT_TLS_CERT`, `PRINTRMENT_TLS_KEY` | (none) | Use your own certificate and key files (inside the container) instead of a self-made one; setting both turns HTTPS on |
 | `PRINTRMENT_SECURE_COOKIES` | off | Set to `1` when serving through an HTTPS reverse proxy |
 | `TZ` | `UTC` | Time zone for times and file names |
+
+### HTTPS (optional)
+
+By default the app is plain HTTP, so the admin password and the viewer PIN cross your network
+unencrypted. That is fine on a home network you trust; if you'd rather not, set
+`PRINTRMENT_HTTPS=1`. Printrment then makes its own certificate (kept in `/data/key`, renewed
+a month before it runs out) and serves both ports over HTTPS. Your browser will warn once because
+nobody else vouches for a self-made certificate: check the details and continue. On TrueNAS change
+the `x-portals` block to `scheme: https`. To use a certificate from Tailscale or your own CA, set
+`PRINTRMENT_TLS_CERT` and `PRINTRMENT_TLS_KEY` to the files instead. Sign-in cookies are then
+marked Secure automatically.
 
 ### Notes
 

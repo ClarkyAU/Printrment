@@ -123,7 +123,7 @@ func (r *rtspConn) readMessage() (int, string, map[string]string, []byte, error)
 		r.br.UnreadByte()
 		break
 	}
-	line, err := r.br.ReadString('\n')
+	line, err := readLineMax(r.br, 16<<10)
 	if err != nil {
 		return 0, "", nil, nil, err
 	}
@@ -139,8 +139,11 @@ func (r *rtspConn) readMessage() (int, string, map[string]string, []byte, error)
 		}
 	}
 	h := map[string]string{}
-	for {
-		l, err := r.br.ReadString('\n')
+	for n := 0; ; n++ {
+		if n > 100 {
+			return 0, "", nil, nil, fmt.Errorf("camera reply has too many headers")
+		}
+		l, err := readLineMax(r.br, 16<<10)
 		if err != nil {
 			return 0, "", nil, nil, err
 		}
@@ -444,6 +447,9 @@ func (c *Camera) runRTSP(ctx context.Context, cfg Printer) (bool, error) {
 			n, rerr := stdout.Read(chunk)
 			if n > 0 {
 				buf = append(buf, chunk[:n]...)
+				if len(buf) > 32<<20 { // no end of picture in sight: start over
+					buf = buf[:0]
+				}
 				for {
 					s := bytes.Index(buf, []byte{0xff, 0xd8})
 					if s < 0 {
