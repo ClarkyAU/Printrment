@@ -3,7 +3,7 @@
 Printrment's own code: © Clarky3D. All rights reserved (private repository).
 
 Third-party components keep their own licences (see each folder in `third_party/`):
-go-webview2 (MIT), go-winloader (ISC), fyne.io/systray (Apache 2.0), godbus/dbus (BSD 2-clause),
+go-webview2 (MIT; with Microsoft's WebView2Loader, BSD 3-clause), fyne.io/systray (Apache 2.0), godbus/dbus (BSD 2-clause),
 golang.org/x/sys (BSD 3-clause). Fonts: SIL Open Font Licence 1.1.
 
 `cmd/printrment/assets/ffmpeg.exe.gz` is FFmpeg 7.1 and `ffmpeg-linux.gz` is FFmpeg 7.0.2 (static build by John

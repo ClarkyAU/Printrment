@@ -10,11 +10,13 @@ VERSION=$(sed -n 's/^const version = "\(.*\)"/\1/p' cmd/printrment/server.go)
 export GOFLAGS=-mod=mod GOPROXY=off CGO_ENABLED=0
 
 mkdir -p build/linux/icons
+PRINTRMENT_ICON_DIR="$PWD/build/linux/icons" go test -run TestIconPNGs ./cmd/printrment >/dev/null
+# icon, version information and manifest for the Windows exe (see scripts/mkrsrc.py)
+python3 scripts/mkrsrc.py "$VERSION" build/linux/icons cmd/printrment/rsrc_windows_amd64.syso >/dev/null
 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H windowsgui -s -w" -o build/Printrment.exe ./cmd/printrment
 echo "Built build/Printrment.exe ($VERSION)"
 
 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w" -o build/linux/printrment ./cmd/printrment
-PRINTRMENT_ICON_DIR="$PWD/build/linux/icons" go test -run TestIconPNGs ./cmd/printrment >/dev/null
 echo "Built build/linux/printrment ($VERSION)"
 
 # --- AppImage ---------------------------------------------------------------

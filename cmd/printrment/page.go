@@ -1188,7 +1188,6 @@ function renderSettings(){
     li3("x264 (inside FFmpeg)","H.264 video encoder for timelapse files.","GPL v2 or later - (c) VideoLAN - videolan.org"),
     LIN()?li3("Your web browser","Shows this window: a Chrome, Chromium, Edge or Brave app window if one is installed (including Flatpak), otherwise a tab in your default browser.",""):li3("Microsoft Edge WebView2","Shows this window. Uses the WebView2 Runtime already installed with Windows.","Microsoft WebView2 licence - (c) Microsoft"),
     li3("go-webview2","Go bindings that host WebView2"+(LIN()?" (Windows version only).":"."),"MIT - (c) John Chadwick, Serge Zaitsev"),
-    li3("go-winloader","Loads the WebView2 loader"+(LIN()?" (Windows version only).":"."),"ISC - (c) John Chadwick"),
     li3("fyne.io/systray","The tray icon and menu.","Apache 2.0 - (c) Fyne.io and the systray authors"),
     li3("godbus/dbus",LIN()?"Talks to the desktop: tray icon and showing files in the file manager.":"Linux desktop support library (included in the code, unused on Windows).","BSD 2-clause - (c) Georg Reinke, Google"),
     li3("golang.org/x/sys","Operating system calls.","BSD 3-clause - (c) The Go Authors"),

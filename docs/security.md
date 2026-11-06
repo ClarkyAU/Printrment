@@ -15,6 +15,17 @@
 - Replies from the printer are read with size limits (lines, headers, messages, downloads), so a
   misbehaving device on the network can't use up the app's memory.
 
+## Antivirus warnings (Windows)
+
+`Printrment.exe` is not code-signed (certificates cost money), and a new unsigned program can score
+as "suspicious" with machine-learning virus scanners (a few of the ~70 on VirusTotal) even though
+nothing is detected by name. What the app does that scanners notice: it unpacks its bundled FFmpeg
+into `%LOCALAPPDATA%\Printrment` and runs it, unpacks the WebView2 loader DLL into the same folder
+and loads it by full path, can start with Windows if you turn that on, and listens on `127.0.0.1`
+(and, if you turn it on, your home network). To check your copy, compare its SHA-256 with
+`SHA256SUMS.txt` on the release page. The program carries an icon, version information and a
+manifest like any normal program, and no longer loads code into memory by hand.
+
 ## Server mode (Docker / TrueNAS)
 
 - Answers home-network (private) addresses only. Don't publish it to the internet or through a
