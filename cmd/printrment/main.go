@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -51,7 +50,7 @@ func getFFmpeg() (string, error) {
 			ffmpegPath = p
 			return
 		}
-		zr, err := gzip.NewReader(strings.NewReader(ffmpegGz))
+		zr, err := ffmpegSource()
 		if err != nil {
 			ffmpegErr = err
 			return

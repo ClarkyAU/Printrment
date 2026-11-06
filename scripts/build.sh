@@ -9,6 +9,9 @@ cd "$(dirname "$0")/.."
 VERSION=$(sed -n 's/^const version = "\(.*\)"/\1/p' cmd/printrment/server.go)
 export GOFLAGS=-mod=mod GOPROXY=off CGO_ENABLED=0
 
+# Windows embeds FFmpeg uncompressed (see cmd/printrment/ffmpeg_windows.go)
+[ -f cmd/printrment/assets/ffmpeg.exe ] && [ cmd/printrment/assets/ffmpeg.exe -nt cmd/printrment/assets/ffmpeg.exe.gz ] || gunzip -c cmd/printrment/assets/ffmpeg.exe.gz > cmd/printrment/assets/ffmpeg.exe
+
 mkdir -p build/linux/icons
 PRINTRMENT_ICON_DIR="$PWD/build/linux/icons" go test -run TestIconPNGs ./cmd/printrment >/dev/null
 # icon, version information and manifest for the Windows exe (see scripts/mkrsrc.py)

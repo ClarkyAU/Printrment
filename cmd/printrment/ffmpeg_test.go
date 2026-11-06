@@ -1,18 +1,16 @@
 package main
 
 import (
-	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
 	"os"
-	"strings"
 	"sync"
 	"testing"
 )
 
 func TestFFmpegHash(t *testing.T) {
-	zr, err := gzip.NewReader(strings.NewReader(ffmpegGz))
+	zr, err := ffmpegSource()
 	if err != nil {
 		t.Fatal(err)
 	}
