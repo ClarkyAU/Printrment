@@ -9,8 +9,8 @@ exact library sources used, including a patched go-webview2).
 
 - `build/Printrment.exe` (Windows x86-64)
 - `build/linux/printrment` (Linux x86-64, static)
-- `build/printrment-<version>-1.x86_64.rpm` if [nfpm](https://nfpm.goreleaser.com) is installed
-  (`pip install nfpm`); packaging settings are in `packaging/linux/`.
+- `build/Printrment-<version>-x86_64.AppImage` (downloads `appimagetool` and the AppImage runtime on first use, checked against pinned SHA-256 values in `scripts/build.sh`)
+  (the tools are cached in `build/tools`, which git ignores); packaging files are in `packaging/linux/`.
 
 The Docker image is built from the `Dockerfile` (by GitHub Actions; `docker build .` works locally too).
 
@@ -28,7 +28,7 @@ stays as tested. Raising it tightens some TLS defaults; test against a real prin
 1. Set the new version in `cmd/printrment/server.go` (`const version`) and push to `main`.
    GitHub Actions publishes the Docker image (`latest` and the version).
 2. On GitHub, open **Actions > Release > Run workflow** (or push a tag such as `v0.32`).
-   GitHub Actions tests, builds `Printrment.exe` and the Fedora `.rpm`, and publishes them as a
+   GitHub Actions tests, builds `Printrment.exe` and the Linux AppImage, and publishes them as a
    Release with their SHA-256 checksums.
 
 ## Source layout

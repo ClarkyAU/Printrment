@@ -29,6 +29,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -291,28 +292,81 @@ func registerServerHandlers(mux *http.ServeMux) {
 		writeJSON(w, map[string]any{"ok": true})
 	}))
 
-	// Shows a saved picture or timelapse in the browser (server mode has no
-	// file manager to open). Only files inside the snapshot / timelapse folders.
-	mux.HandleFunc("/media", localOnly(func(w http.ResponseWriter, r *http.Request) {
+	// Recordings: lists, shows, downloads and deletes the saved timelapses and
+	// pictures (server mode has no file manager). Only files directly inside
+	// the timelapse / snapshot folders, only .mp4 / .jpg.
+	mux.HandleFunc("/api/media", localOnly(func(w http.ResponseWriter, r *http.Request) {
 		if !serverMode {
 			http.NotFound(w, r)
 			return
 		}
 		s := cfg.get()
-		p := r.URL.Query().Get("path")
-		if !(insideDir(p, s.SnapshotDir) || insideDir(p, s.TimelapseDir)) {
-			http.Error(w, "not one of Printrment's files", 403)
-			return
+		dir, ext := s.TimelapseDir, ".mp4"
+		if r.URL.Query().Get("kind") == "snapshots" {
+			dir, ext = s.SnapshotDir, ".jpg"
 		}
-		// no following links out of the folders either
-		real, err := filepath.EvalSymlinks(p)
-		sd, _ := filepath.EvalSymlinks(s.SnapshotDir)
-		td, _ := filepath.EvalSymlinks(s.TimelapseDir)
-		if err != nil || !(insideDir(real, sd) || insideDir(real, td)) {
+		type item struct {
+			Name string `json:"name"`
+			Path string `json:"path"`
+			Size int64  `json:"size"`
+			Time int64  `json:"time"`
+		}
+		items := []item{}
+		var total int64
+		ents, _ := os.ReadDir(dir)
+		for _, e := range ents {
+			if !e.Type().IsRegular() || !strings.EqualFold(filepath.Ext(e.Name()), ext) {
+				continue
+			}
+			fi, err := e.Info()
+			if err != nil {
+				continue
+			}
+			total += fi.Size()
+			items = append(items, item{e.Name(), filepath.Join(dir, e.Name()), fi.Size(), fi.ModTime().UnixMilli()})
+		}
+		sort.Slice(items, func(i, j int) bool { return items[i].Time > items[j].Time })
+		count := len(items)
+		if len(items) > 1000 {
+			items = items[:1000]
+		}
+		writeJSON(w, map[string]any{"items": items, "count": count, "total": total, "dir": dir})
+	}))
+
+	mux.HandleFunc("/api/media/delete", localOnly(func(w http.ResponseWriter, r *http.Request) {
+		if !serverMode || r.Method != http.MethodPost {
 			http.NotFound(w, r)
 			return
 		}
-		f, err := os.Open(real)
+		var in struct{ Path string }
+		if readJSON(r, &in) != nil {
+			http.Error(w, "bad request", 400)
+			return
+		}
+		p, ok := mediaFile(in.Path)
+		if !ok {
+			http.Error(w, "not one of Printrment's files", 403)
+			return
+		}
+		if err := os.Remove(p); err != nil {
+			writeJSON(w, map[string]any{"ok": false, "reason": err.Error()})
+			return
+		}
+		appendLog("deleted " + p)
+		writeJSON(w, map[string]any{"ok": true})
+	}))
+
+	mux.HandleFunc("/media", localOnly(func(w http.ResponseWriter, r *http.Request) {
+		if !serverMode {
+			http.NotFound(w, r)
+			return
+		}
+		p, ok := mediaFile(r.URL.Query().Get("path"))
+		if !ok {
+			http.Error(w, "not one of Printrment's files", 403)
+			return
+		}
+		f, err := os.Open(p)
 		if err != nil {
 			http.NotFound(w, r)
 			return
@@ -323,13 +377,12 @@ func registerServerHandlers(mux *http.ServeMux) {
 			http.NotFound(w, r)
 			return
 		}
-		ext := strings.ToLower(filepath.Ext(p))
-		if ext != ".jpg" && ext != ".jpeg" && ext != ".mp4" {
-			http.Error(w, "unsupported file", 403)
-			return
+		disp := "inline"
+		if r.URL.Query().Get("dl") == "1" {
+			disp = "attachment"
 		}
-		w.Header().Set("Content-Type", mime.TypeByExtension(ext))
-		w.Header().Set("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": filepath.Base(p)}))
+		w.Header().Set("Content-Type", mime.TypeByExtension(strings.ToLower(filepath.Ext(p))))
+		w.Header().Set("Content-Disposition", mime.FormatMediaType(disp, map[string]string{"filename": filepath.Base(p)}))
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; media-src 'self'")
 		http.ServeContent(w, r, filepath.Base(p), st.ModTime(), f)
 	}))
@@ -388,6 +441,33 @@ func runServer() {
 		}
 	}()
 	select {}
+}
+
+// mediaFile checks that p is a saved timelapse (.mp4) or picture (.jpg) directly
+// inside Printrment's own folders, following no links out of them, and returns
+// its real path.
+func mediaFile(p string) (string, bool) {
+	if p == "" || strings.ContainsRune(p, 0) {
+		return "", false
+	}
+	s := cfg.get()
+	ext := strings.ToLower(filepath.Ext(p))
+	real, err := filepath.EvalSymlinks(p)
+	if err != nil {
+		return "", false
+	}
+	for _, d := range []struct{ dir, ext string }{{s.TimelapseDir, ".mp4"}, {s.SnapshotDir, ".jpg"}} {
+		rd, err := filepath.EvalSymlinks(d.dir)
+		if err != nil || ext != d.ext {
+			continue
+		}
+		if filepath.Dir(real) == filepath.Clean(rd) {
+			if st, err := os.Lstat(real); err == nil && st.Mode().IsRegular() {
+				return real, true
+			}
+		}
+	}
+	return "", false
 }
 
 // healthcheck is "printrment --healthcheck" for Docker's HEALTHCHECK.

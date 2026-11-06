@@ -1,6 +1,6 @@
 # Security
 
-## Desktop app (Windows, Fedora)
+## Desktop app (Windows, Linux)
 
 - Local UI and API need a per-run secret token; requests with the wrong Host header are refused.
 - Printer certificates are remembered on first connect and any change is refused (with an alert).

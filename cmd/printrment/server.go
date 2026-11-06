@@ -20,7 +20,7 @@ import (
 )
 
 const listenAddr = "127.0.0.1:8787"
-const version = "0.31"
+const version = "0.32"
 
 var (
 	lastActivity   time.Time

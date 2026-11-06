@@ -54,5 +54,10 @@ compiled app, not the source code.
   HttpOnly, SameSite=Strict and expires after 30 days; changing the password signs everyone out;
   wrong passwords lock out after 5 tries; every API call needs Printrment's own header, so other
   websites can't drive it; desktop-only actions (quit, window, file manager) don't exist on the server.
+- **Timelapses and pictures:** timelapses are off until you turn on "Record every print
+  automatically" in Settings (they use disk space), or start one by hand. Everything is kept in the
+  `/data` volume (`timelapses/`, `snapshots/`). Use the **recordings** button (top right) to play,
+  download or delete them in the browser, no file access to the container needed. The browser only
+  reaches those two folders.
 - **One printer, two apps:** running the desktop app and the server at the same time works, but both
   will connect to the printer's camera.

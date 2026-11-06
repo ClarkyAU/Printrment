@@ -199,7 +199,9 @@ func (st *store) load() {
 	}
 	st.unsealLocked()
 	if fresh {
-		st.s.TimelapseAuto = true
+		// Timelapses fill up storage, so they're only recorded once you turn
+		// them on (Timelapse > "Record every print automatically").
+		st.s.TimelapseAuto = false
 		st.s.NotifyFlash = true
 	}
 	st.applyDefaults()

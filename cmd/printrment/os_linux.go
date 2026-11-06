@@ -36,7 +36,7 @@ func openWindow(url string) {
 			}
 		}
 	}
-	// Flatpak installs (common on Fedora) aren't on the PATH
+	// Flatpak installs aren't on the PATH
 	if fp, err := exec.LookPath("flatpak"); err == nil {
 		for _, id := range []string{"com.google.Chrome", "org.chromium.Chromium", "com.microsoft.Edge", "com.brave.Browser"} {
 			if exec.Command(fp, "info", id).Run() == nil && start(exec.Command(fp, append([]string{"run", id}, args...)...)) {
@@ -108,6 +108,18 @@ func desktopQuote(s string) string {
 	return `"` + r.Replace(s) + `"`
 }
 
+// startCommand is what the desktop should run at login. Inside an AppImage
+// that's the .AppImage file itself ($APPIMAGE), not the temporary copy of the
+// program the AppImage unpacks or mounts while it runs.
+func startCommand() (string, error) {
+	if a := os.Getenv("APPIMAGE"); a != "" && filepath.IsAbs(a) {
+		if fi, err := os.Stat(a); err == nil && fi.Mode().IsRegular() {
+			return a, nil
+		}
+	}
+	return os.Executable()
+}
+
 func setAutostart(on bool) {
 	p := autostartFile()
 	if p == "" {
@@ -117,7 +129,7 @@ func setAutostart(on bool) {
 		os.Remove(p)
 		return
 	}
-	exe, err := os.Executable()
+	exe, err := startCommand()
 	if err != nil || strings.ContainsAny(exe, "\n\r") {
 		return
 	}

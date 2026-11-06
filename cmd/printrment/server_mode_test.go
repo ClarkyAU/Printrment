@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -104,5 +106,44 @@ func TestAdminGuard(t *testing.T) {
 	}
 	if w := do("POST", "/login", "192.168.1.77", "password=another-password-2", nil, nil); w.Code != 429 {
 		t.Errorf("locked-out device: %d", w.Code)
+	}
+}
+
+func TestMediaFile(t *testing.T) {
+	d := t.TempDir()
+	t.Setenv("PRINTRMENT_DATA", d)
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	tl, sn := filepath.Join(d, "tl"), filepath.Join(d, "sn")
+	os.MkdirAll(filepath.Join(tl, "sub"), 0o755)
+	os.MkdirAll(sn, 0o755)
+	cfg.update(func(s *Settings) { s.TimelapseDir, s.SnapshotDir = tl, sn })
+	write := func(p string) string { os.WriteFile(p, []byte("x"), 0o644); return p }
+	vid := write(filepath.Join(tl, "a.mp4"))
+	pic := write(filepath.Join(sn, "b.jpg"))
+	secret := write(filepath.Join(d, "config.json"))
+	write(filepath.Join(tl, "sub", "c.mp4"))
+	write(filepath.Join(tl, "notes.txt"))
+	os.Symlink(secret, filepath.Join(tl, "link.mp4"))
+	os.Symlink(d, filepath.Join(sn, "up"))
+
+	for _, ok := range []string{vid, pic} {
+		if _, good := mediaFile(ok); !good {
+			t.Errorf("should allow %s", ok)
+		}
+	}
+	for _, bad := range []string{
+		secret,                            // outside the folders
+		filepath.Join(tl, "sub", "c.mp4"), // only files directly inside
+		filepath.Join(tl, "notes.txt"),    // wrong type
+		filepath.Join(sn, "a.mp4"),        // wrong folder for the type
+		filepath.Join(tl, "link.mp4"),     // link pointing out
+		filepath.Join(sn, "up", "config.json"),
+		filepath.Join(tl, "..", "config.json"),
+		filepath.Join(tl, "missing.mp4"),
+		tl, "", "a.mp4\x00",
+	} {
+		if p, good := mediaFile(bad); good {
+			t.Errorf("should refuse %q (got %q)", bad, p)
+		}
 	}
 }

@@ -1,6 +1,6 @@
 name: Release
 
-# Builds the Windows exe and the Fedora .rpm and publishes them as a GitHub
+# Builds the Windows exe and the Linux AppImage and publishes them as a GitHub
 # Release for the version in cmd/printrment/server.go. Start it from the
 # Actions tab (Release > Run workflow), or push a tag like v0.31.
 # (The Docker image is built by docker.yml.)
@@ -42,7 +42,6 @@ jobs:
 
       - name: Build
         run: |
-          pip install --quiet nfpm==2.48.0
           scripts/build.sh
 
       - name: Publish release
@@ -53,9 +52,9 @@ jobs:
           cat > notes.md <<NOTES
           **Downloads**
           - **Windows:** \`Printrment.exe\`, just run it
-          - **Fedora Linux:** \`printrment-$v.0-1.x86_64.rpm\`, then \`sudo dnf install ./printrment-$v.0-1.x86_64.rpm\` ([notes]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/fedora.md))
+          - **Linux (any distribution):** \`Printrment-$v-x86_64.AppImage\`, then \`chmod +x\` it and run it ([notes]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/linux.md))
           - **Docker / TrueNAS:** \`ghcr.io/clarkyau/printrment:$v\` ([setup]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/docs/docker-truenas.md))
           NOTES
-          sha256sum build/Printrment.exe build/printrment-*.rpm | sed 's#build/##' > build/SHA256SUMS.txt
+          sha256sum build/Printrment.exe build/Printrment-*.AppImage | sed 's#build/##' > build/SHA256SUMS.txt
           gh release create "v$v" --target "$GITHUB_SHA" --title "Printrment $v" --notes-file notes.md \
-            build/Printrment.exe build/printrment-*.rpm build/SHA256SUMS.txt
+            build/Printrment.exe build/Printrment-*.AppImage build/SHA256SUMS.txt

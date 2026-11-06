@@ -58,9 +58,9 @@ const page = `<!doctype html><html lang=en><meta charset=utf-8>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);background-image:var(--bg-img);color:var(--tx);font:13.5px/1.4 var(--font)}
 body{display:flex;flex-direction:column;overflow:hidden}
-button{font:inherit;font-family:var(--btn-font);text-transform:var(--btn-tt);color:var(--btn-tx);background:var(--btn);border:1px solid var(--btn-b);border-radius:var(--rb);padding:6px 11px;cursor:pointer;white-space:nowrap;box-shadow:var(--bshadow)}
+button,a.btn{font:inherit;font-family:var(--btn-font);text-transform:var(--btn-tt);color:var(--btn-tx);background:var(--btn);border:1px solid var(--btn-b);border-radius:var(--rb);padding:6px 11px;cursor:pointer;white-space:nowrap;box-shadow:var(--bshadow)}
 [data-theme=webstore] button{font-size:12px;letter-spacing:.06em}
-button:hover:not(:disabled){background:var(--btn-h)}
+button:hover:not(:disabled),a.btn:hover{background:var(--btn-h)}
 button:active:not(:disabled){transform:translate(1px,1px)}
 button:disabled{opacity:.45;cursor:default}
 button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
@@ -364,6 +364,13 @@ button{padding:4px 9px}
 .chip2 .rmb{position:absolute;left:0;bottom:0;height:3px;background:var(--mut);opacity:.7}
 .chip2.low .rmb{background:var(--warn);opacity:1}.chip2.on .rmb{background:var(--acc)}
 .card:empty,body.remote #bfiles{display:none}
+body:not(.server) #brec,body.remote #brec{display:none!important}
+#rtabs{display:flex;gap:4px}#rtabs button{padding:4px 10px}#rtabs button.on{border-color:var(--acc);color:var(--tx)}
+#rsum{flex:1;text-align:right;font-size:12px;padding-right:6px}
+#rdet{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+#rdet video,#rdet img{width:100%;max-height:300px;background:#000;border-radius:calc(var(--r) * .6);object-fit:contain}
+#rdet .nm{font-weight:650;word-break:break-all}
+#rdet .btns a{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
 .crow{display:grid;grid-template-columns:1fr 1fr 40px;gap:8px}.crow.few{display:flex}.crow.few>button{flex:1}.crow.few>.lbtn.solo{gap:8px}
 .crow button{height:36px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;padding:0 6px}
 .crow svg{width:14px;height:14px;fill:currentColor;flex:none}
@@ -430,17 +437,17 @@ body.compact #stage:hover #bar{opacity:1}
 .ib.folder svg{width:17px;height:17px}
 
 /* ---- printer files panel */
-#files{position:fixed;inset:0;background:var(--veil);display:none;z-index:41;align-items:center;justify-content:center;padding:18px}
-#files.open{display:flex}
-#fbox{width:min(980px,100%);height:min(660px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:calc(var(--r) * 1.4);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px #0008}
-[data-theme=webstore] #fbox{box-shadow:10px 10px 0 #000;border:2px solid var(--acc)}
-#fhead{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
-#fhead h2{margin:0 8px 0 2px;font-size:14px;font-family:var(--label);text-transform:var(--label-tt);letter-spacing:var(--label-ls)}
+#files,#recs{position:fixed;inset:0;background:var(--veil);display:none;z-index:41;align-items:center;justify-content:center;padding:18px}
+#files.open,#recs.open{display:flex}
+#fbox,#rbox{width:min(980px,100%);height:min(660px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:calc(var(--r) * 1.4);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px #0008}
+[data-theme=webstore] #fbox,[data-theme=webstore] #rbox{box-shadow:10px 10px 0 #000;border:2px solid var(--acc)}
+#fhead,#rhead{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+#fhead h2,#rhead h2{margin:0 8px 0 2px;font-size:14px;font-family:var(--label);text-transform:var(--label-tt);letter-spacing:var(--label-ls)}
 #fcrumb{flex:1;display:flex;gap:2px;align-items:center;min-width:0;overflow:hidden;color:var(--mut)}
 #fcrumb button{padding:2px 6px;background:transparent;border-color:transparent;box-shadow:none;color:var(--mut);font-family:var(--font);text-transform:none;letter-spacing:0}
 #fcrumb button:last-child{color:var(--tx);font-weight:600}
-#fbody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}
-#flist{overflow-y:auto;border-right:1px solid var(--line);padding:6px}
+#fbody,#rbody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}
+#flist,#rlist{overflow-y:auto;border-right:1px solid var(--line);padding:6px}
 .frow{display:grid;grid-template-columns:22px minmax(0,1fr) 70px 96px;gap:8px;align-items:center;width:100%;text-align:left;padding:7px 8px;background:transparent;border:1px solid transparent;border-radius:calc(var(--r) * .6);box-shadow:none;color:var(--tx);font-family:var(--font);text-transform:none;letter-spacing:0}
 .frow:hover{background:var(--btn)}
 .frow.sel,.frow.sel:hover:not(:disabled){background:var(--tile);border-color:var(--acc);color:var(--tx)}.frow.sel .nm{font-weight:650}.frow.sel svg{color:var(--acc);opacity:1}
@@ -519,6 +526,7 @@ body.remote .local{display:none!important}body.server #cpin,body.server #bquit{d
  <div id=topr>
   <button class="ib local" id=bcompact title="Compact view (small, always on top)"></button>
   <button class="ib folder" id=bfiles title="Files on the printer"></button>
+  <button class="ib" id=brec title="Timelapses and pictures"></button>
   <button class="ib" id=balert title="Alerts and activity"></button>
   <button class="ib local" id=bset title="Settings"></button>
  </div>
@@ -558,6 +566,10 @@ body.remote .local{display:none!important}body.server #cpin,body.server #bquit{d
 </div>
 <div id=toasts></div>
 <div id=pop></div>
+<div id=recs><div id=rbox>
+ <div id=rhead><h2>Recordings</h2><div id=rtabs></div><span id=rsum class=mut></span><button class=ib id=rrefresh title="Refresh"></button><button id=rclose>Close</button></div>
+ <div id=rbody><div id=rlist></div><div id=rdet></div></div>
+</div></div>
 <div id=files><div id=fbox>
  <div id=fhead><h2>Printer files</h2><div id=fcrumb></div><button class=ib id=frefresh title="Refresh"></button><button id=fclose>Close</button></div>
  <div id=fbody><div id=flist></div><div id=fdet></div></div>
@@ -595,6 +607,7 @@ const IC={pause:'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y=
  pip:'<path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2v10h16V7zm8 4h7v5h-7z"/>',
  snap:'<path d="M9 4h6l1.5 2H20a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3.5zm3 4a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/>',
  full:'<path d="M3 3h7v2H5v5H3zm11 0h7v7h-2V5h-5zM3 14h2v5h5v2H3zm16 0h2v7h-7v-2h5z"/>',
+ rec:'<rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="M16.5 10.2l5-3v9.6l-5-3z"/>',
  tl:'<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16zm-1 3v5.4l4.3 2.6 1-1.7-3.3-2V7z"/>',
  campause:'<path d="M3 6h12a1 1 0 0 1 1 1v3.2l4.4-3a.5.5 0 0 1 .8.4v8.8a.5.5 0 0 1-.8.4l-4.4-3V17a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zm3.5 3v6h2V9zm4 0v6h2V9z"/>',
  camplay:'<path d="M3 6h12a1 1 0 0 1 1 1v3.2l4.4-3a.5.5 0 0 1 .8.4v8.8a.5.5 0 0 1-.8.4l-4.4-3V17a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zm4.5 2.8v6.4l5-3.2z"/>',
@@ -835,6 +848,7 @@ function renderPop(){const el=$("#pop");if(!pop||!S){el.className="";el.replaceC
    if(canCtl)out.push(h("div",{class:"btns",style:"margin-top:8px"},tl.recording?h("button",{onclick:()=>tlAct("stop")},"Stop & save"):h("button",{class:"pri",disabled:!p,onclick:()=>tlAct("start")},"Start recording")));
    if(!remote&&settingsCache)out.push(h("label",{class:"sw",style:"margin-top:8px"},h("span",null,"Record every print automatically"),h("input",{type:"checkbox",checked:settingsCache.timelapse_auto,onchange:e=>saveSetting({timelapse_auto:e.target.checked})}),h("i")));
    if(tl.last_file&&!remote)out.push(h("div",{class:"note"},"Last: ",h("a",{href:"#",onclick:e=>{e.preventDefault();showFile(tl.last_file)},text:tl.last_file.split(/[\\/]/).pop()})));
+   if(SRV()&&!remote)out.push(h("div",{class:"note"},h("a",{href:"#",onclick:e=>{e.preventDefault();pop=null;render();openRec("timelapses")},text:"All timelapses"})));
    if(!remote)out.push(h("div",{class:"note"},h("a",{href:"#",onclick:e=>{e.preventDefault();pop=null;openSettings("files")},text:"Timelapse settings"})));
    return out})
  }}
@@ -852,9 +866,40 @@ $("#bsnap").replaceChildren(svg(IC.snap));$("#bfs").replaceChildren(svg(IC.full)
 let F={open:false,path:"/",list:null,err:"",loading:false,sel:null,info:null,infoErr:"",infoLoading:false,plate:1,map:{},opts:{use_ams:true,bed_level:true,flow_cali:false,timelapse:false},arm:0,note:null,busy:false};
 function fmtSize(n){return n>=1048576?(n/1048576).toFixed(1)+" MB":n>=1024?Math.round(n/1024)+" KB":n+" B"}
 function fmtDur(s){return fmtMin(s/60)||"<1m"}
+// ---- recordings (server mode): timelapses and pictures saved on the server
+const R={open:false,kind:"timelapses",list:null,count:0,total:0,sel:null,err:null,loading:false,arm:"",media:null};
+function openRec(kind){if(!SRV()||remote)return;R.open=true;if(kind)R.kind=kind;R.sel=null;R.arm="";$("#recs").classList.add("open");loadRec()}
+function closeRec(){R.open=false;R.sel=null;R.media=null;$("#recs").classList.remove("open");$("#rdet").replaceChildren()}
+async function loadRec(){R.loading=true;R.err=null;renderRec();
+ try{const j=await api("/api/media?kind="+R.kind);R.list=j.items||[];R.count=j.count;R.total=j.total;if(R.sel&&!R.list.find(x=>x.path===R.sel.path))R.sel=null}catch(e){R.err=String(e.message||e)}
+ R.loading=false;renderRec()}
+async function delRec(it){
+ if(R.arm!==it.path){R.arm=it.path;renderRec();setTimeout(()=>{if(R.arm===it.path){R.arm="";renderRec()}},4000);return}
+ R.arm="";try{const r=await api("/api/media/delete",{path:it.path});if(!r.ok)R.err=r.reason;else{R.sel=null;R.media=null}}catch(e){R.err=String(e.message||e)}
+ loadRec()}
+function recTab(kind){if(R.kind===kind)return;R.kind=kind;R.sel=null;R.media=null;R.list=null;loadRec()}
+function renderRec(){if(!R.open)return;const vid=R.kind==="timelapses";
+ $("#rtabs").replaceChildren(h("button",{class:vid?"on":"",onclick:()=>recTab("timelapses")},"Timelapses"),h("button",{class:vid?"":"on",onclick:()=>recTab("snapshots")},"Pictures"));
+ $("#rrefresh").replaceChildren(svg(IC.refresh));
+ $("#rsum").textContent=R.list?R.count+(vid?(R.count===1?" video":" videos"):(R.count===1?" picture":" pictures"))+" · "+fmtSize(R.total):"";
+ const L=$("#rlist");
+ if(R.loading&&!R.list)L.replaceChildren(h("div",{class:"mut",style:"padding:12px"},"Loading..."));
+ else if(R.list&&!R.list.length)L.replaceChildren(h("div",{class:"mut",style:"padding:12px"},vid?"No timelapses yet. Start one from the Timelapse button, or turn on \"Record every print automatically\".":"No pictures yet. Snapshots and the pictures taken when prints finish or fail show up here."));
+ else L.replaceChildren(...(R.list||[]).map(it=>h("button",{class:"frow"+(R.sel&&R.sel.path===it.path?" sel":""),title:it.name,onclick:()=>{R.sel=it;R.arm="";renderRec()}},
+   svg(vid?IC.rec:IC.snap),h("span",{class:"nm",text:it.name}),h("span",{class:"sz",text:fmtSize(it.size)}),h("span",{class:"dt",text:new Date(it.time).toLocaleDateString()}))));
+ const D=$("#rdet"),it=R.sel,out=[];
+ if(R.err)out.push(h("div",{class:"note err",text:R.err}));
+ if(!it){out.push(h("div",{class:"mut",text:vid?"Pick a timelapse to play it.":"Pick a picture to see it."}));D.replaceChildren(...out);return}
+ const src="/media?path="+encodeURIComponent(it.path);
+ // keep the same player while only the buttons change, so playback isn't restarted
+ if(!R.media||R.media._path!==it.path){R.media=vid?h("video",{controls:"",preload:"metadata",src:src}):h("img",{src:src,alt:""});R.media._path=it.path}
+ out.push(R.media,h("div",{class:"nm",text:it.name}),h("div",{class:"mut",text:fmtSize(it.size)+" · "+new Date(it.time).toLocaleString()}),
+  h("div",{class:"btns"},h("a",{class:"btn",href:src+"&dl=1",download:it.name},"Download"),
+   h("button",{class:"danger"+(R.arm===it.path?" armed":""),onclick:()=>delRec(it)},R.arm===it.path?"Confirm delete":"Delete")));
+ D.replaceChildren(...out)}
 function openFiles(){if(!P()||remote)return;F.open=true;$("#files").classList.add("open");loadDir(F.path)}
 function closeFiles(){F.open=false;$("#files").classList.remove("open")}
-$("#bfiles").onclick=openFiles;$("#fclose").onclick=closeFiles;$("#files").onclick=e=>{if(e.target.id==="files")closeFiles()};
+$("#bfiles").onclick=openFiles;$("#brec").replaceChildren(svg(IC.rec));$("#brec").onclick=()=>openRec();$("#rclose").onclick=closeRec;$("#rrefresh").onclick=loadRec;$("#recs").onclick=e=>{if(e.target.id==="recs")closeRec()};$("#fclose").onclick=closeFiles;$("#files").onclick=e=>{if(e.target.id==="files")closeFiles()};
 $("#frefresh").onclick=()=>loadDir(F.path);
 async function loadDir(path){const p=P();if(!p)return;F.path=path;F.loading=true;F.err="";renderFiles();
  try{const r=await api("/api/files?id="+encodeURIComponent(p.id)+"&path="+encodeURIComponent(path));if(r.ok){F.list=r.entries}else{F.err=r.reason;F.list=[]}}catch(e){F.err=String(e.message||e);F.list=[]}
@@ -997,7 +1042,7 @@ if(native){document.body.classList.add("native");
  // Edge fallback window: tell the app when this window goes away
  window.addEventListener("pagehide",()=>{try{if(!remote)navigator.sendBeacon("/api/closing?x=1"+TQ)}catch(e){}});
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(fsMode)setFull(false);else if(F.open)closeFiles();else if(pop){pop=null;render()}else if($("#set").classList.contains("open"))closeSettings();else if(compact)setCompact(false)}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(fsMode)setFull(false);else if(R.open)closeRec();else if(F.open)closeFiles();else if(pop){pop=null;render()}else if($("#set").classList.contains("open"))closeSettings();else if(compact)setCompact(false)}});
 
 // Settings > Printers > Check
 const checkRes={};
@@ -1069,8 +1114,8 @@ function renderSettings(){
  }else if(setTab==="files"){
   const sd=h("input",{value:s.snapshot_dir}),td=h("input",{value:s.timelapse_dir}),iv=h("input",{type:"number",min:2,max:600,value:s.timelapse_interval,style:"max-width:120px"});
   out.push(h("h4",null,"Recording & files"),h("p",{class:"sub"},"Where snapshots and timelapse videos are saved."),
-   field("Snapshot folder",h("div",{style:"display:flex;gap:6px"},sd,SRV()?null:h("button",{onclick:ev=>{ev.preventDefault();api("/api/openfolder",{which:"snapshots"})}},"Open"))),
-   field("Timelapse folder",h("div",{style:"display:flex;gap:6px"},td,SRV()?null:h("button",{onclick:ev=>{ev.preventDefault();api("/api/openfolder",{which:"timelapses"})}},"Open"))),
+   field("Snapshot folder",h("div",{style:"display:flex;gap:6px"},sd,h("button",{onclick:ev=>{ev.preventDefault();if(SRV()){closeSettings();openRec("snapshots")}else api("/api/openfolder",{which:"snapshots"})}},SRV()?"Browse":"Open"))),
+   field("Timelapse folder",h("div",{style:"display:flex;gap:6px"},td,h("button",{onclick:ev=>{ev.preventDefault();if(SRV()){closeSettings();openRec("timelapses")}else api("/api/openfolder",{which:"timelapses"})}},SRV()?"Browse":"Open"))),
    h("div",{class:"box"},sw("Record a timelapse of every print","timelapse_auto","Starts when a print starts and saves an .mp4 when it finishes. The camera stays connected while recording, even with this window closed."),
     field("Take a frame",h("select",{onchange:e=>saveSetting({timelapse_mode:e.target.value})},opt("layer","Every layer (smooth, like Bambu's own timelapse)",s.timelapse_mode==="layer"),opt("interval","Every few seconds",s.timelapse_mode==="interval"))),
     s.timelapse_mode==="interval"?field("Seconds between frames",iv):null),
@@ -1085,13 +1130,13 @@ function renderSettings(){
     h("div",{class:"btns",style:"margin-top:10px;max-width:380px"},SRV()?null:h("button",{class:"pri",onclick:openRemote},"Open on this PC"),h("button",{onclick:()=>saveSetting({},{new_pin:true})},"New PIN (signs everyone out)")),
     SRV()?null:h("div",{class:"mut",style:"margin-top:6px;font-size:12px",text:"Open on this PC shows the web version in your normal browser, so you can check the page and PIN. It doesn't test Wi-Fi or the firewall - use a phone for that."}),
     remoteNote?h("div",{class:"note "+(remoteNote.ok?"ok":"err"),text:remoteNote.text}):null,
-    SRV()?null:h("div",{class:"note",text:LIN()?"Fedora's firewall usually allows this already. If other devices can't connect, allow the port: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload":"The first time, Windows may ask whether to allow Printrment on private networks. Allow it, or other devices can't connect."})));
+    SRV()?null:h("div",{class:"note",text:LIN()?"If other devices can't connect, your firewall may be blocking the port. On Fedora and similar: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload":"The first time, Windows may ask whether to allow Printrment on private networks. Allow it, or other devices can't connect."})));
   out.push(field("Port",h("div",{style:"display:flex;gap:6px"},port,h("button",{onclick:ev=>{ev.preventDefault();saveSetting({remote_port:parseInt(port.value)||8788})}},"Save"))));
   const st=(t,d)=>h("li",null,h("b",{text:t}),h("div",{class:"mut",text:d}));
   out.push(h("details",{class:"guide",open:guideOpen==null?!s.remote:guideOpen,ontoggle:e=>{guideOpen=e.target.open}},h("summary",null,"How to set up remote access"),
    h("ol",null,
     SRV()?st("Turn it on","Switch on \"Allow viewing from other devices on my network\" above. An address and a PIN appear."):st("Turn it on and try it here","Switch on \"Allow viewing from other devices on my network\" above. An address and a PIN appear. Press \"Open on this PC\" to check the page and PIN in your browser first."),
-    SRV()?null:LIN()?st("Allow it through the firewall","Fedora's firewall (firewalld) is on, but Fedora Workstation already lets other devices on your network reach ports like this one, so usually there's nothing to do. If they can't connect, run in a terminal: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload"):
+    SRV()?null:LIN()?st("Allow it through the firewall","Most Linux desktops let other devices on your network reach this already. If they can't connect, your firewall may be blocking the port. On Fedora and similar, run in a terminal: sudo firewall-cmd --permanent --add-port="+(s.remote_port||8788)+"/tcp && sudo firewall-cmd --reload"):
     st("Allow it through Windows Firewall","The first time, Windows asks whether Printrment may use the network. Tick Private networks and choose Allow. If you missed it: Start > Windows Security > Firewall & network protection > Allow an app through firewall > tick Private next to Printrment."),
     st("Put the other device on the same network","Remote access only works on your home network - for a phone that means Wi-Fi, not mobile data. Guest Wi-Fi networks usually block devices from seeing each other, so use the main one."),
     st("Open the address in a browser","On the other device, type the address shown above into the browser (Safari, Chrome, Edge...) exactly as shown, including the :"+(s.remote_port||8788)+" at the end. If more than one address is listed, try the first; the others are for other network connections on this PC."),
@@ -1122,7 +1167,7 @@ function renderSettings(){
     h("form",{method:"post",action:"/logout",style:"margin-top:10px"},h("button",null,"Sign out")));
   }else
   out.push(h("h4",null,"App"),h("p",{class:"sub"},"How Printrment starts and closes."),
-   h("div",{class:"box"},sw("Closing the window hides Printrment in the tray","tray","Off (default): the close button quits Printrment completely. On: it keeps running in the tray by the clock, so alerts and timelapses carry on - right-click the tray icon and choose Quit to close it fully."+(LIN()?" Fedora's GNOME desktop only shows tray icons with the AppIndicator extension: sudo dnf install gnome-shell-extension-appindicator, then sign out and back in. KDE shows them already.":"")),sw(LIN()?"Start when I sign in":"Start with Windows","autostart","Starts quietly in the tray when you sign in. If you move "+(LIN()?"Printrment":"Printrment.exe")+", turn this off and on again.")));
+   h("div",{class:"box"},sw("Closing the window hides Printrment in the tray","tray","Off (default): the close button quits Printrment completely. On: it keeps running in the tray by the clock, so alerts and timelapses carry on - right-click the tray icon and choose Quit to close it fully."+(LIN()?" GNOME only shows tray icons with the AppIndicator extension (on Fedora: sudo dnf install gnome-shell-extension-appindicator, then sign out and back in). KDE shows them already.":"")),sw(LIN()?"Start when I sign in":"Start with Windows","autostart","Starts quietly in the tray when you sign in. If you move "+(LIN()?"Printrment":"Printrment.exe")+", turn this off and on again.")));
   out.push(
    h("h4",{style:"margin-top:18px"},"Back up your settings"),
    h("p",{class:"sub"},"Saves your printers, theme and options to a file, to set up another PC or after a reinstall. Access codes, the remote access PIN and printer certificates are left out - you enter the codes again after importing."),
