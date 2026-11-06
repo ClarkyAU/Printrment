@@ -26,6 +26,15 @@ docker compose -f deploy/docker-compose.yml up -d
 docker logs printrment          # shows the first admin password
 ```
 
+### Updating
+
+Apps installed with **Install via YAML** are "custom apps", and TrueNAS doesn't reliably show an
+"Update available" badge for them the way it does for catalog apps. The compose file has
+`pull_policy: always`, so to update: open the app, **Edit**, **Save** (or Stop, then Start). It
+downloads the newest image and restarts. If your app was made from an older copy of the YAML,
+add the `pull_policy: always` line under `image:`. To stay on a specific version instead, use
+`image: ghcr.io/clarkyau/printrment:0.33`, and change the number when you want to update.
+
 ### Pulling the image
 
 The repository is private, so the image is private too. Either log the server in to `ghcr.io`

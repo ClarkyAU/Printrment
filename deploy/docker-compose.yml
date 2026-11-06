@@ -3,6 +3,9 @@
 services:
   printrment:
     image: ghcr.io/clarkyau/printrment:latest
+    # Fetch the newest image every time the app is (re)deployed or restarted,
+    # so updating is: Edit > Save (or Stop > Start) on TrueNAS.
+    pull_policy: always
     container_name: printrment
     restart: unless-stopped
     # Host networking lets Printrment find printers on your network and
